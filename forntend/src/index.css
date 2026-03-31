@@ -1,1 +1,317 @@
 @import "tailwindcss";
+
+/* Unieke custom styling voor Toets Management Systeem */
+
+/* Gradient hero background - directe kleuren zonder variabelen */
+.gradient-hero {
+  background: linear-gradient(135deg, #7c3aed 0%, #6c2bd9 50%, #0ea5e9 100%);
+}
+
+/* Pattern dots - meer zichtbaar maken */
+.pattern-dots {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 2px,
+    transparent 2px
+  );
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+
+/* Glassmorphism effect voor cards - meer transparant */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(108, 43, 217, 0.2);
+  box-shadow: 0 8px 32px rgba(108, 43, 217, 0.15);
+}
+
+/* Rest van je CSS blijft hetzelfde */
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #6c2bd9 0%, #8b5cf6 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse glow effect */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(108, 43, 217, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(108, 43, 217, 0.6);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(108, 43, 217, 0.15);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f0ff;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #6c2bd9 0%, #8b5cf6 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5b21b6 0%, #6c2bd9 100%);
+}
+
+/* Icon glow effect */
+.icon-glow {
+  filter: drop-shadow(0 0 8px rgba(108, 43, 217, 0.4));
+}
+
+/* Ripple effect voor buttons */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.ripple-effect:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Custom focus ring met gradient */
+.focus-gradient:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(108, 43, 217, 0.3);
+}
+
+:root {
+  --font-size: 16px;
+
+  /* Uniek kleurenschema: Paars-Violet met Turquoise accenten */
+  --background: #faf8ff;
+  --foreground: #1a0b2e;
+
+  --card: #ffffff;
+  --card-foreground: #1a0b2e;
+
+  --popover: #ffffff;
+  --popover-foreground: #1a0b2e;
+
+  /* Hoofdkleur: Diep violet/paars */
+  --primary: #6c2bd9;
+  --primary-foreground: #ffffff;
+
+  /* Secundair: Turquoise accent */
+  --secondary: #e0f2fe;
+  --secondary-foreground: #0c4a6e;
+
+  --muted: #f3f0ff;
+  --muted-foreground: #6b7280;
+
+  --accent: #ddd6fe;
+  --accent-foreground: #5b21b6;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(108, 43, 217, 0.15);
+  --input: transparent;
+  --input-background: #f9f5ff;
+  --switch-background: #c4b5fd;
+
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+
+  --ring: #6c2bd9;
+
+  /* Custom kleuren voor grafieken */
+  --chart-1: #6c2bd9;
+  --chart-2: #0ea5e9;
+  --chart-3: #8b5cf6;
+  --chart-4: #06b6d4;
+  --chart-5: #a78bfa;
+
+  /* Grotere border radius voor moderne look */
+  --radius: 0.875rem;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a0b2e;
+  --sidebar-primary: #6c2bd9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f0ff;
+  --sidebar-accent-foreground: #5b21b6;
+  --sidebar-border: rgba(108, 43, 217, 0.15);
+  --sidebar-ring: #6c2bd9;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: 1rem;
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+}
