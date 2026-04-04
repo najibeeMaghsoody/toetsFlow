@@ -13,7 +13,6 @@ const api = axios.create({
 
 console.log("🔵 [API] Base URL:", api.defaults.baseURL);
 
-// Interceptor voor token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   console.log(
@@ -28,6 +27,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor - alleen loggen, geen auto-logout
 api.interceptors.response.use(
   (response) => {
     console.log(

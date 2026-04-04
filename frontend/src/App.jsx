@@ -78,16 +78,16 @@ function DashboardRouter() {
 
   switch (user.role) {
     case "student":
-      console.log("✅ [DashboardRouter] Redirecting to /student/dashboard");
+      console.log("[DashboardRouter] Redirecting to /student/dashboard");
       return <Navigate to="/student/dashboard" />;
     case "teacher":
-      console.log("✅ [DashboardRouter] Redirecting to /teacher/dashboard");
+      console.log("[DashboardRouter] Redirecting to /teacher/dashboard");
       return <Navigate to="/teacher/dashboard" />;
     case "admin":
-      console.log("✅ [DashboardRouter] Redirecting to /admin/dashboard");
+      console.log("[DashboardRouter] Redirecting to /admin/dashboard");
       return <Navigate to="/admin/dashboard" />;
     default:
-      console.warn("🔴 [DashboardRouter] Unknown role:", user.role);
+      console.warn("[DashboardRouter] Unknown role:", user.role);
       return <Navigate to="/login" />;
   }
 }

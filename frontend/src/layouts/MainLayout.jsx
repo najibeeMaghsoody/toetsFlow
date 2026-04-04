@@ -1,9 +1,8 @@
-// frontend/src/layouts/MainLayout.jsx
 import React from "react";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"; // ← Deze import miste!
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
-import { useAuth } from "../contexts/AuthContext"; // ← VOEG DIT TOE!
 
 const MainLayout = () => {
   const { user } = useAuth();
