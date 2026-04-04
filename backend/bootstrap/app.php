@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminOnly::class,
         ]);
         
-   
+        // Configureer API middleware
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',

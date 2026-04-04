@@ -3,96 +3,126 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+
+    /**
+     * Registreer een nieuwe gebruiker
+     */
+    public function register(RegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'student', // Altijd student bij registratie
+            ]);
 
-        if ($validator->fails()) {
+            // Maak token aan voor de gebruiker
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid credentials',
-            ], 401);
-        }
-
-        // Verwijder bestaande tokens
-        $user->tokens()->delete();
-        
-        // Maak nieuw token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'data' => [
-                'user' => $user->makeHidden(['password']),
+                'success' => true,
+                'message' => 'Account succesvol aangemaakt',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
                 'token' => $token,
-                'token_type' => 'Bearer',
-            ],
-        ]);
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Er is iets misgegaan bij het registreren',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    public function register(Request $request)
+    /**
+     * Login gebruiker
+     */
+    public function login(LoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'sometimes|in:student,teacher,admin',
-        ]);
+        try {
+            $credentials = $request->only('email', 'password');
 
-        if ($validator->fails()) {
+            if (!Auth::attempt($credentials)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ongeldige email of wachtwoord',
+                ], 401);
+            }
+
+            $user = Auth::user();
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Succesvol ingelogd',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+                'token' => $token,
+            ], 200);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => 'Er is iets misgegaan bij het inloggen',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'student',
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration successful',
-            'data' => [
-                'user' => $user->makeHidden(['password']),
-                'token' => $token,
-                'token_type' => 'Bearer',
-            ],
-        ], 201);
     }
 
+    /**
+     * Logout gebruiker
+     */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        try {
+            $request->user()->currentAccessToken()->delete();
 
+            return response()->json([
+                'success' => true,
+                'message' => 'Succesvol uitgelogd',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Er is iets misgegaan bij het uitloggen',
+            ], 500);
+        }
+    }
+
+    /**
+     * Haal ingelogde gebruiker op
+     */
+    public function me(Request $request)
+    {
         return response()->json([
             'success' => true,
-            'message' => 'Logged out successfully',
+            'user' => [
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                'role' => $request->user()->role,
+            ],
         ]);
     }
 }
