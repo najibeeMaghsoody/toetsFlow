@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\HasApiTokens;
 
 class AuthController extends Controller
 {
@@ -23,10 +24,10 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'student', // Altijd student bij registratie
+                'role' => 'student', 
             ]);
 
-            // Maak token aan voor de gebruiker
+          
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([

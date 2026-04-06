@@ -1,85 +1,76 @@
 <?php
-
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
+        'name', 'email', 'password', 'role', 'email_verified_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
 
-    /**
-     * Role validation
-     */
-    protected function role(): Attribute
+    // Relationships
+    public function student()
     {
-        return Attribute::make(
-            get: fn ($value) => $value,
-            set: fn ($value) => in_array($value, ['student', 'teacher', 'admin']) ? $value : 'student',
-        );
+        return $this->hasOne(Student::class);
     }
 
-    /**
-     * Check if user has specific role
-     */
-    public function hasRole(string $role): bool
+    public function teacher()
     {
-        return $this->role === $role;
+        return $this->hasOne(Teacher::class);
     }
 
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin(): bool
+    public function admin()
+    {
+        return $this->hasOne(Admin::class);
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'user_group');
+    }
+
+    public function testAttempts()
+    {
+        return $this->hasMany(TestAttempt::class);
+    }
+
+    public function createdTests()
+    {
+        return $this->hasMany(Test::class, 'teacher_id');
+    }
+
+    public function createdGroups()
+    {
+        return $this->hasMany(Group::class, 'teacher_id');
+    }
+
+    // Helper methods
+    public function isAdmin()
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Check if user is teacher
-     */
-    public function isTeacher(): bool
+    public function isTeacher()
     {
         return $this->role === 'teacher';
     }
 
-    /**
-     * Scope for filtering by role
-     */
-    public function scopeByRole($query, $role)
+    public function isStudent()
     {
-        return $query->where('role', $role);
+        return $this->role === 'student';
     }
 }

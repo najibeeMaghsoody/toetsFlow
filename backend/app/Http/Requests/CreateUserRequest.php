@@ -7,12 +7,13 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 
-class StoreUserRequest extends FormRequest
+class CreateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Alleen admins kunnen gebruikers opslaan
-        return Auth::check() && Auth::user()->role === 'admin';
+        // Alleen admins kunnen gebruikers aanmaken
+        $user = Auth::user();
+        return $user && $user->role === 'admin';
     }
 
     public function rules(): array
@@ -22,16 +23,20 @@ class StoreUserRequest extends FormRequest
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'role' => 'required|in:student,teacher,admin',
-            'student_number' => 'required_if:role,student|unique:students,student_number',
-            'teacher_number' => 'required_if:role,teacher|unique:teachers,teacher_number',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'student_number.required_if' => 'Student nummer is verplicht voor studenten',
-            'teacher_number.required_if' => 'Docent nummer is verplicht voor docenten',
+            'name.required' => 'Naam is verplicht',
+            'email.required' => 'Email is verplicht',
+            'email.email' => 'Voer een geldig email adres in',
+            'email.unique' => 'Dit email adres bestaat al',
+            'password.required' => 'Wachtwoord is verplicht',
+            'password.min' => 'Wachtwoord moet minimaal 8 tekens bevatten',
+            'role.required' => 'Rol is verplicht',
+            'role.in' => 'Ongeldige rol',
         ];
     }
 

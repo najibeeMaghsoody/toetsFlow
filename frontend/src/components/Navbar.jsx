@@ -33,7 +33,7 @@ const Navbar = () => {
           {/* Logo - gecentreerd op mobiel */}
           <Link to="/" className="flex items-center gap-3 ml-12 lg:ml-0">
             <div className="bg-linear-to-br from-purple-600 to-violet-700 p-2 rounded-xl shadow-lg">
-              <GraduationCap className="size-8 text-zinc-800" />
+              <GraduationCap className="size-8 text-white" />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold bg-linear-to-r from-purple-700 to-violet-600 bg-clip-text text-transparent">
