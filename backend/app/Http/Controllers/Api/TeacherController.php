@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\TestAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends BaseController
 {
@@ -21,7 +22,8 @@ class TeacherController extends BaseController
         $this->middleware('role:teacher');
     }
 
-    // Test Management
+    // ==================== TEST MANAGEMENT ====================
+    
     public function getTests(Request $request)
     {
         $tests = $request->user()->createdTests()
@@ -82,7 +84,8 @@ class TeacherController extends BaseController
         return response()->json(['message' => 'Test deleted successfully']);
     }
 
-    // Section Management
+    // ==================== SECTION MANAGEMENT ====================
+    
     public function addSection(Request $request, $testId)
     {
         $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
@@ -109,12 +112,25 @@ class TeacherController extends BaseController
         return response()->json($section, 201);
     }
 
-    // Question Management
+    public function deleteSection(Request $request, $sectionId)
+    {
+        $section = Section::with('test')->findOrFail($sectionId);
+        
+        if ($section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $section->delete();
+        
+        return response()->json(['message' => 'Section deleted successfully']);
+    }
+
+    // ==================== QUESTION MANAGEMENT ====================
+    
     public function addQuestion(Request $request, $sectionId)
     {
         $section = Section::with('test')->findOrFail($sectionId);
         
-        // Verify ownership
         if ($section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -139,7 +155,21 @@ class TeacherController extends BaseController
         return response()->json($question, 201);
     }
 
-    // Answer Management
+    public function deleteQuestion(Request $request, $questionId)
+    {
+        $question = Question::with('section.test')->findOrFail($questionId);
+        
+        if ($question->section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $question->delete();
+        
+        return response()->json(['message' => 'Question deleted successfully']);
+    }
+
+    // ==================== ANSWER MANAGEMENT ====================
+    
     public function addAnswer(Request $request, $questionId)
     {
         $question = Question::with('section.test')->findOrFail($questionId);
@@ -168,7 +198,21 @@ class TeacherController extends BaseController
         return response()->json($answer, 201);
     }
 
-    // Group Management
+    public function deleteAnswer(Request $request, $answerId)
+    {
+        $answer = Answer::with('question.section.test')->findOrFail($answerId);
+        
+        if ($answer->question->section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $answer->delete();
+        
+        return response()->json(['message' => 'Answer deleted successfully']);
+    }
+
+    // ==================== GROUP MANAGEMENT ====================
+    
     public function getGroups(Request $request)
     {
         $groups = $request->user()->createdGroups()
@@ -225,7 +269,8 @@ class TeacherController extends BaseController
         return response()->json(['message' => 'Group deleted successfully']);
     }
 
-    // Add students to group
+    // ==================== STUDENTS IN GROUP ====================
+    
     public function addStudentToGroup(Request $request, $groupId)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($groupId);
@@ -257,7 +302,8 @@ class TeacherController extends BaseController
         return response()->json(['message' => 'Student removed from group']);
     }
 
-    // Assign test to group
+    // ==================== ASSIGN TESTS ====================
+    
     public function assignTestToGroup(Request $request, $groupId, $testId)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($groupId);
@@ -280,7 +326,6 @@ class TeacherController extends BaseController
         return response()->json(['message' => 'Test assigned to group']);
     }
 
-    // Assign test to individual student
     public function assignTestToStudent(Request $request, $testId)
     {
         $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
@@ -295,7 +340,6 @@ class TeacherController extends BaseController
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Create a group specifically for this individual assignment
         $groupName = "Individual_{$test->title}_{$request->user_id}";
         $group = Group::firstOrCreate([
             'name' => $groupName,
@@ -312,7 +356,73 @@ class TeacherController extends BaseController
         return response()->json(['message' => 'Test assigned to student']);
     }
 
-    // Get students with many mistakes for retake
+    // ==================== ASSIGNMENTS (GET) ====================
+    
+    public function getAssignments(Request $request)
+    {
+        // Haal alle groepen van de docent op met hun toegewezen toetsen
+        $groups = Group::where('teacher_id', $request->user()->id)
+            ->with(['tests' => function($query) {
+                $query->withPivot('start_date', 'end_date', 'id');
+            }, 'users'])
+            ->get();
+
+        // Formatteer de data
+        $assignments = [];
+        
+        foreach ($groups as $group) {
+            foreach ($group->tests as $test) {
+                // Check of dit een individuele toewijzing is
+                $isIndividual = str_starts_with($group->name, 'Individual_');
+                
+                if ($isIndividual && $group->users->count() === 1) {
+                    // Individuele toewijzing
+                    $student = $group->users->first();
+                    $assignments[] = [
+                        'id' => $test->pivot->id,
+                        'test_id' => $test->id,
+                        'test' => [
+                            'id' => $test->id,
+                            'title' => $test->title,
+                            'description' => $test->description,
+                        ],
+                        'user_id' => $student->id,
+                        'user' => [
+                            'id' => $student->id,
+                            'name' => $student->name,
+                            'email' => $student->email,
+                        ],
+                        'start_date' => $test->pivot->start_date,
+                        'end_date' => $test->pivot->end_date,
+                    ];
+                } else {
+                    // Groep toewijzing
+                    $assignments[] = [
+                        'id' => $test->pivot->id,
+                        'test_id' => $test->id,
+                        'test' => [
+                            'id' => $test->id,
+                            'title' => $test->title,
+                            'description' => $test->description,
+                        ],
+                        'group_id' => $group->id,
+                        'group' => [
+                            'id' => $group->id,
+                            'name' => $group->name,
+                            'description' => $group->description,
+                        ],
+                        'start_date' => $test->pivot->start_date,
+                        'end_date' => $test->pivot->end_date,
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['data' => $assignments]);
+    }
+
+    // ==================== RETAKE MANAGEMENT ====================
+    
     public function getStudentsForRetake(Request $request, $testId)
     {
         $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);

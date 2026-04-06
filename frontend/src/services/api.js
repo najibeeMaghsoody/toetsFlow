@@ -1,46 +1,33 @@
-// frontend/src/services/api.js
+// services/api.js
 import axios from "axios";
 
-console.log("🔵 [API] Initializing axios instance");
-
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
 
-console.log("🔵 [API] Base URL:", api.defaults.baseURL);
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  console.log(
-    `🔵 [API] ${config.method?.toUpperCase()} request to ${config.url}`,
-  );
-  console.log("🔵 [API] Token present:", token ? "Yes" : "No");
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log("🔵 [API] Authorization header added");
-  }
-  return config;
-});
-
-// Response interceptor - alleen loggen, geen auto-logout
-api.interceptors.response.use(
-  (response) => {
-    console.log(
-      `✅ [API] Response from ${response.config.url}:`,
-      response.status,
-    );
-    return response;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
+  (error) => Promise.reject(error),
+);
+
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
-    console.error(
-      `🔴 [API] Error from ${error.config?.url}:`,
-      error.response?.status || error.message,
-    );
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   },
 );

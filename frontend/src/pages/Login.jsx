@@ -114,8 +114,8 @@ const Login = () => {
         toast.success("Succesvol ingelogd!");
 
         setTimeout(() => {
-          if (result.user?.role === "docent") {
-            navigate("/docent/dashboard");
+          if (result.user?.role === "teacher") {
+            navigate("/teacher/dashboard");
           } else if (result.user?.role === "admin") {
             navigate("/admin/dashboard");
           } else {

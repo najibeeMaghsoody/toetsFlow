@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Retake management
         Route::get('/tests/{testId}/retake-candidates', [TeacherController::class, 'getStudentsForRetake']);
+        Route::get('/assignments', [TeacherController::class, 'getAssignments']);
     });
 
     // Student routes

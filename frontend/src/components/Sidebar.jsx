@@ -16,17 +16,7 @@ const Sidebar = ({ isMobile = false, onClose = () => {} }) => {
   const { user, logout } = useAuth();
 
   return (
-    <div
-      className="flex flex-col h-full relative overflow-hidden border-r border-purple-200 "
-      style={{
-        background:
-          "linear-gradient(135deg, #7c3aed 0%, #6c2bd9 50%, #0ea5e9 100%)",
-        backgroundImage:
-          "radial-gradient(circle, rgba(255, 255, 255, 0.2) 2px, transparent 2px)",
-        backgroundSize: "24px 24px",
-        backgroundPosition: "0 0",
-      }}
-    >
+    <div className="flex flex-col h-full relative overflow-hidden border-r border-purple-200 ">
       <div className="absolute top-20 right-10 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl float-animation"></div>
       <div
         className="absolute bottom-20 left-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl float-animation"
@@ -54,19 +44,19 @@ const Sidebar = ({ isMobile = false, onClose = () => {} }) => {
         <div className="px-6 pb-6 space-y-4 border-b border-white/10">
           <div className="flex items-center gap-4 text-zinc-800/70 py-1 hover:text-purple-600 hover:bg-purple-600/10 rounded-lg px-2 -mx-2 transition-colors cursor-pointer">
             <Calendar className="size-4" />
-            <span className="text-sm">Schedule</span>
+            <span className="text-sm">Toetsen</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-800/70 py-1 hover:text-purple-600 hover:bg-purple-600/10 rounded-lg px-2 -mx-2 transition-colors cursor-pointer">
             <BarChart3 className="size-4" />
-            <span className="text-sm">Report</span>
+            <span className="text-sm">Resultaten</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-800/70 py-1 hover:text-purple-600 hover:bg-purple-600/10 rounded-lg px-2 -mx-2 transition-colors cursor-pointer">
             <Users className="size-4" />
-            <span className="text-sm">Teams</span>
+            <span className="text-sm">Groupen</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-800/70 py-1 hover:text-purple-600 hover:bg-purple-600/10 rounded-lg px-2 -mx-2 transition-colors cursor-pointer">
             <Briefcase className="size-4" />
-            <span className="text-sm">Clients</span>
+            <span className="text-sm">Studenten</span>
           </div>
         </div>
 
