@@ -1,4 +1,3 @@
-// frontend/src/contexts/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import authService from "../services/authService";
 
@@ -13,28 +12,60 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     console.log("🔵 [AuthContext] Running checkAuth");
-    checkAuth();
-  }, []);
 
-  const checkAuth = async () => {
-    console.log("🔵 [AuthContext] Checking authentication...");
+    // Eerst herstellen uit localStorage
     const token = localStorage.getItem("token");
-    console.log("🔵 [AuthContext] Token found:", token ? "Yes" : "No");
+    const storedUser = localStorage.getItem("user");
 
-    if (token) {
-      const userData = await authService.getCurrentUser();
-      if (userData) {
-        console.log("✅ [AuthContext] User authenticated:", userData);
-        setUser(userData);
+    console.log("🔵 [AuthContext] Token found:", token ? "Yes" : "No");
+    console.log(
+      "🔵 [AuthContext] Stored user found:",
+      storedUser ? "Yes" : "No",
+    );
+
+    if (token && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log(
+          "🔵 [AuthContext] Restored user from localStorage:",
+          parsedUser,
+        );
+        setUser(parsedUser);
         setIsAuthenticated(true);
-      } else {
-        console.log("🔴 [AuthContext] Invalid token, removing");
-        localStorage.removeItem("token");
+        setIsLoading(false);
+
+        // Valideer token bij backend (async)
+        authService
+          .getCurrentUser()
+          .then((userData) => {
+            if (userData) {
+              console.log("✅ [AuthContext] Token validated, user:", userData);
+              setUser(userData);
+              localStorage.setItem("user", JSON.stringify(userData));
+            } else {
+              console.log("🔴 [AuthContext] Token invalid, clearing");
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              setUser(null);
+              setIsAuthenticated(false);
+            }
+          })
+          .catch((error) => {
+            console.error("🔴 [AuthContext] Error validating token:", error);
+            // Blijf bij de localStorage user, maar log de error
+          });
+      } catch (e) {
+        console.error(
+          "🔴 [AuthContext] Error parsing user from localStorage",
+          e,
+        );
+        setIsLoading(false);
       }
+    } else {
+      console.log("🔵 [AuthContext] No stored credentials found");
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    console.log("✅ [AuthContext] Initialization complete");
-  };
+  }, []);
 
   const register = async (userData) => {
     console.log("🔵 [AuthContext] Register called with:", userData);

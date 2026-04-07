@@ -2,28 +2,28 @@ import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
-const PrivateRoute = ({ requiredRole }) => {
-  const { user, loading } = useAuth();
+const PrivateRoute = () => {
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  console.log("🔵 [PrivateRoute] isLoading:", isLoading, "user:", user?.role);
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
-          <div className="spinner-border animate-spin w-8 h-8 border-4 border-blue-500 rounded-full"></div>
-          <p className="mt-2">Laden...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Laden...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
+    console.log("🔴 [PrivateRoute] No user, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
+  console.log("✅ [PrivateRoute] User authenticated, rendering outlet");
   return <Outlet />;
 };
 

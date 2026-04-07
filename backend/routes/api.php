@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/groups/{id}', [TeacherController::class, 'updateGroup']);
         Route::delete('/groups/{id}', [TeacherController::class, 'deleteGroup']);
         
+         Route::get('/students', [TeacherController::class, 'getStudents']);
         // Group students
         Route::post('/groups/{groupId}/students', [TeacherController::class, 'addStudentToGroup']);
         Route::delete('/groups/{groupId}/students/{userId}', [TeacherController::class, 'removeStudentFromGroup']);

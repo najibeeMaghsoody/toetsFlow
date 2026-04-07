@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
@@ -26,28 +25,13 @@ function App() {
           <Route path="/register" element={<Register />} />
         </Route>
 
+        {/* Protected routes */}
         <Route element={<PrivateRoute />}>
           <Route element={<MainLayout />}>
-            {/* Redirects */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<DashboardRouter />} />
-
-            {/* Student routes */}
-            <Route
-              path="/student"
-              element={<Navigate to="/student/dashboard" />}
-            />
             <Route path="/student/dashboard" element={<StudentDashboard />} />
-
-            {/* Teacher routes */}
-            <Route
-              path="/teacher"
-              element={<Navigate to="/teacher/dashboard" />}
-            />
             <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-
-            {/* Admin routes */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Route>
         </Route>
@@ -57,9 +41,9 @@ function App() {
 }
 
 function DashboardRouter() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -76,16 +60,16 @@ function DashboardRouter() {
 
   console.log("🔵 [DashboardRouter] User role:", user.role);
 
+  // Direct renderen van de dashboard componenten ipv Navigate
   switch (user.role) {
     case "student":
-      console.log("[DashboardRouter] Redirecting to /student/dashboard");
-      return <Navigate to="/student/dashboard" />;
+      console.log("[DashboardRouter] Rendering StudentDashboard");
+      return <StudentDashboard />;
     case "teacher":
-      console.log("[DashboardRouter] Redirecting to /teacher/dashboard");
       return <Navigate to="/teacher/dashboard" />;
     case "admin":
-      console.log("[DashboardRouter] Redirecting to /admin/dashboard");
-      return <Navigate to="/admin/dashboard" />;
+      console.log("[DashboardRouter] Rendering AdminDashboard");
+      return <AdminDashboard />;
     default:
       console.warn("[DashboardRouter] Unknown role:", user.role);
       return <Navigate to="/login" />;

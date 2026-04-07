@@ -442,6 +442,17 @@ class TeacherController extends BaseController
             $query->where('test_id', $testId)->latest();
         }])->get();
 
-        return response()->json($students);
+       
+     return response()->json($students);
     }
+    
+    public function getStudents(Request $request)
+{
+    // Haal alle studenten op (alleen basis informatie)
+    $students = User::where('role', 'student')
+        ->select('id', 'name', 'email')
+        ->get();
+    
+    return response()->json(['data' => $students]);
+}
 }

@@ -20,8 +20,9 @@ import { GroupFormDialog } from "../../components/teacher/GroupFormDialog";
 import { SectionFormDialog } from "../../components/teacher/SectionFormDialog";
 import { QuestionFormDialog } from "../../components/teacher/QuestionFormDialog";
 
-export function DocentDashboard() {
-  const { currentUser, logout } = useAuth();
+export function TeacherDashboard() {
+  const { user, logout } = useAuth();
+  console.log("🎯🎯🎯 TEACHER DASHBOARD IS RENDERING! 🎯🎯🎯");
   const navigate = useNavigate();
   const {
     loading,
@@ -87,14 +88,12 @@ export function DocentDashboard() {
 
   if (loading) return <LoadingSpinner />;
 
-  if (!currentUser || currentUser.role !== "teacher") {
+  if (!user || user.role !== "teacher") {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-50 via-violet-50 to-cyan-50 pattern-grid">
-      <Header user={currentUser} onLogout={handleLogout} />
-
+    <div className="min-h-screen   s pattern-grid">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="tests" className="space-y-4">
           <TabsList className="bg-white/80 backdrop-blur-sm border border-purple-200">
@@ -208,4 +207,4 @@ export function DocentDashboard() {
   );
 }
 
-export default DocentDashboard;
+export default TeacherDashboard;

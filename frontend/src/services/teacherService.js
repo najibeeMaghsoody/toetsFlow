@@ -201,13 +201,13 @@ export const addAssignment = async (assignment) => {
   }
 };
 
-// ============ STUDENTS ============
 export const getStudents = async () => {
   try {
-    const response = await api.get("/admin/users?role=student");
+    const response = await api.get("/teacher/students");
     return response.data.data || [];
   } catch (error) {
-    console.error("Error fetching students:", error);
+    console.warn("Could not fetch students:", error.message);
+    // Return lege array ipv error te gooien
     return [];
   }
 };

@@ -1,11 +1,13 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; // ← Deze import miste!
+import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 
 const MainLayout = () => {
   const { user } = useAuth();
+
+  console.log("🔵 [MainLayout] Rendering with user:", user?.role);
 
   return (
     <div className="flex h-screen bg-gray-100">
