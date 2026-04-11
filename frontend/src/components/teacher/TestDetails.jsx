@@ -1,4 +1,4 @@
-// components/docent/TestDetails.jsx
+// components/docent/TestDetails.jsx (aangepast)
 import {
   Card,
   CardContent,
@@ -16,23 +16,17 @@ export function TestDetails({
   onDeleteSection,
   onAddQuestion,
   onDeleteQuestion,
-  isSectionDialogOpen,
-  setIsSectionDialogOpen,
-  isQuestionDialogOpen,
-  setIsQuestionDialogOpen,
-  editingSection,
-  setEditingSection,
 }) {
   if (!test) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Test Details</CardTitle>
-          <CardDescription>Select a test to edit</CardDescription>
+          <CardTitle>Toets Details</CardTitle>
+          <CardDescription>Select een toets om te bewerken</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-500 text-center py-8">
-            Select a test to edit
+            Selecteer een toets om te bewerken.
           </p>
         </CardContent>
       </Card>
@@ -46,33 +40,29 @@ export function TestDetails({
           <div>
             <CardTitle>{test.title}</CardTitle>
             <CardDescription>
-              {test.description || "No description"}
+              {test.description || "Geen beschrijving"}
             </CardDescription>
           </div>
-          <Button size="sm" onClick={() => setIsSectionDialogOpen(true)}>
+          <Button size="sm" onClick={onAddSection}>
             <Plus className="w-4 h-4 mr-2" />
-            Section
+            Nieuwe Sectie
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {test.sections?.length === 0 ? (
+        {!test.sections || test.sections.length === 0 ? (
           <p className="text-sm text-gray-500 text-center py-4">
-            No sections added yet
+            Geen secties. Voeg een sectie toe om te beginnen.
           </p>
         ) : (
           <div className="space-y-3">
-            {test.sections?.map((section) => (
+            {test.sections.map((section) => (
               <SectionCard
                 key={section.id}
                 section={section}
-                onDelete={() => onDeleteSection(section.id)}
-                onAddQuestion={() => onAddQuestion(section.id)}
+                onDelete={onDeleteSection}
+                onAddQuestion={onAddQuestion}
                 onDeleteQuestion={onDeleteQuestion}
-                isQuestionDialogOpen={isQuestionDialogOpen}
-                setIsQuestionDialogOpen={setIsQuestionDialogOpen}
-                editingSection={editingSection}
-                setEditingSection={setEditingSection}
               />
             ))}
           </div>

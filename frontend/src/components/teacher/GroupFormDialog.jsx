@@ -1,5 +1,11 @@
 // components/docent/GroupFormDialog.jsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -23,11 +29,14 @@ export function GroupFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Group</DialogTitle>
+          <DialogTitle>Nieuwe Groep</DialogTitle>
+          <DialogDescription>
+            Maak een nieuwe groep aan. Voeg later studenten toe aan deze groep.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>Groep Naam</Label>
             <Input
               value={formData.name}
               onChange={(e) =>
@@ -37,7 +46,7 @@ export function GroupFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>Beschrijving</Label>
             <Textarea
               value={formData.description}
               onChange={(e) =>
@@ -47,7 +56,7 @@ export function GroupFormDialog({
             />
           </div>
           <Button onClick={handleSubmit} className="w-full">
-            Create Group
+            Nieuwe Groep Aanmaken
           </Button>
         </div>
       </DialogContent>

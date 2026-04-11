@@ -1,4 +1,4 @@
-// pages/docent/DocentDashboard.jsx
+// pages/docent/DocentDashboard.jsx (aangepast)
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
@@ -11,7 +11,6 @@ import {
 import { FileText, Users, ClipboardList } from "lucide-react";
 import { useTeacherData } from "../../hooks/useTeacherData";
 import { LoadingSpinner } from "../../components/teacher/LoadingSpinner";
-import { Header } from "../../components/teacher/Header";
 import { TestsTab } from "../../components/teacher/TestsTab";
 import { GroupsTab } from "../../components/teacher/GroupsTab";
 import { AssignmentsTab } from "../../components/teacher/AssignmentsTab";
@@ -22,8 +21,8 @@ import { QuestionFormDialog } from "../../components/teacher/QuestionFormDialog"
 
 export function TeacherDashboard() {
   const { user, logout } = useAuth();
-  console.log("🎯🎯🎯 TEACHER DASHBOARD IS RENDERING! 🎯🎯🎯");
   const navigate = useNavigate();
+
   const {
     loading,
     tests,
@@ -86,6 +85,51 @@ export function TeacherDashboard() {
     navigate("/");
   };
 
+  // Functie om een sectie toe te voegen aan de geselecteerde test
+  const handleAddSection = async (sectionData) => {
+    if (!selectedTest?.id) {
+      console.error("Geen test geselecteerd");
+      return false;
+    }
+    const success = await createSection(selectedTest.id, sectionData);
+    if (success) {
+      setIsSectionDialogOpen(false);
+      setSectionForm({ title: "", description: "", new_page: false });
+    }
+    return success;
+  };
+
+  // Functie om een vraag toe te voegen aan de geselecteerde sectie
+  const handleAddQuestion = async (questionData) => {
+    if (!editingSection?.id) {
+      console.error("Geen sectie geselecteerd voor vraag");
+      return false;
+    }
+    const success = await createQuestion(editingSection.id, questionData);
+    if (success) {
+      setIsQuestionDialogOpen(false);
+      setQuestionForm({
+        question_text: "",
+        type: "single_choice",
+        answers: [{ text: "", isCorrect: false }],
+      });
+      setEditingSection(null);
+    }
+    return success;
+  };
+
+  // Functie om een sectie te verwijderen
+  const handleDeleteSection = async (sectionId) => {
+    const success = await removeSection(sectionId);
+    return success;
+  };
+
+  // Functie om een vraag te verwijderen
+  const handleDeleteQuestion = async (questionId) => {
+    const success = await removeQuestion(questionId);
+    return success;
+  };
+
   if (loading) return <LoadingSpinner />;
 
   if (!user || user.role !== "teacher") {
@@ -93,7 +137,7 @@ export function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen   s pattern-grid">
+    <div className="min-h-screen pattern-grid">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="tests" className="space-y-4">
           <TabsList className="bg-white/80 backdrop-blur-sm border border-purple-200">
@@ -128,10 +172,21 @@ export function TeacherDashboard() {
               onSelectTest={setSelectedTest}
               onDeleteTest={removeTest}
               onOpenTestDialog={() => setIsTestDialogOpen(true)}
-              onAddSection={() => setIsSectionDialogOpen(true)}
-              onDeleteSection={removeSection}
-              onAddQuestion={() => setIsQuestionDialogOpen(true)}
-              onDeleteQuestion={removeQuestion}
+              onAddSection={() => {
+                setSectionForm({ title: "", description: "", new_page: false });
+                setIsSectionDialogOpen(true);
+              }}
+              onDeleteSection={handleDeleteSection}
+              onAddQuestion={(section) => {
+                setEditingSection(section);
+                setQuestionForm({
+                  question_text: "",
+                  type: "single_choice",
+                  answers: [{ text: "", isCorrect: false }],
+                });
+                setIsQuestionDialogOpen(true);
+              }}
+              onDeleteQuestion={handleDeleteQuestion}
               isSectionDialogOpen={isSectionDialogOpen}
               setIsSectionDialogOpen={setIsSectionDialogOpen}
               isQuestionDialogOpen={isQuestionDialogOpen}
@@ -193,7 +248,7 @@ export function TeacherDashboard() {
         onOpenChange={setIsSectionDialogOpen}
         formData={sectionForm}
         setFormData={setSectionForm}
-        onSubmit={(data) => createSection(selectedTest?.id, data)}
+        onSubmit={handleAddSection}
       />
 
       <QuestionFormDialog
@@ -201,7 +256,7 @@ export function TeacherDashboard() {
         onOpenChange={setIsQuestionDialogOpen}
         formData={questionForm}
         setFormData={setQuestionForm}
-        onSubmit={(data) => createQuestion(editingSection?.id, data)}
+        onSubmit={handleAddQuestion}
       />
     </div>
   );

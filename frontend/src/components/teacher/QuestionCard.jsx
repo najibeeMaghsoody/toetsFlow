@@ -28,7 +28,7 @@ export function QuestionCard({ question, index, onDelete }) {
             </div>
           )}
           {question.type === "text" && (
-            <p className="text-xs text-gray-500 italic mt-1">Open answer</p>
+            <p className="text-xs text-gray-500 italic mt-1">Open antwoord</p>
           )}
         </div>
         <Button variant="ghost" size="sm" onClick={onDelete}>

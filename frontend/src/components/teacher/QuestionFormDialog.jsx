@@ -1,5 +1,10 @@
-// components/docent/QuestionFormDialog.jsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -58,11 +63,16 @@ export function QuestionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Question</DialogTitle>
+          <DialogTitle>Nieuwe Vraag</DialogTitle>
+          <DialogDescription>
+            Voeg een nieuwe vraag toe aan de sectie. Kies het type vraag en voeg
+            de antwoorden toe.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {/* Rest van je code blijft hetzelfde */}
           <div className="space-y-2">
-            <Label>Question Text</Label>
+            <Label>Vraag Text</Label>
             <Textarea
               value={formData.question_text}
               onChange={(e) =>
@@ -73,7 +83,7 @@ export function QuestionFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Question Type</Label>
+            <Label>Vraag Type</Label>
             <Select
               value={formData.type}
               onValueChange={(value) =>
@@ -89,12 +99,12 @@ export function QuestionFormDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="single_choice">
-                  Multiple Choice (Single Answer)
+                  Single Choice (enkele Antwoord)
                 </SelectItem>
                 <SelectItem value="multiple_choice">
-                  Multiple Choice (Multiple Answers)
+                  Multiple Choice (Multiple Antwoord)
                 </SelectItem>
-                <SelectItem value="text">Open Question</SelectItem>
+                <SelectItem value="text">Open Vraag</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -102,7 +112,7 @@ export function QuestionFormDialog({
           {formData.type !== "text" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Answers</Label>
+                <Label>Antwoorden</Label>
                 <Button size="sm" variant="outline" onClick={addAnswer}>
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -136,7 +146,7 @@ export function QuestionFormDialog({
           )}
 
           <Button onClick={handleSubmit} className="w-full">
-            Add Question
+            Nieuwe Vraag Toevoegen
           </Button>
         </div>
       </DialogContent>

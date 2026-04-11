@@ -1,5 +1,11 @@
 // components/docent/TestFormDialog.jsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -24,7 +30,10 @@ export function TestFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Test</DialogTitle>
+          <DialogTitle>Nieuw Toets</DialogTitle>
+          <DialogDescription>
+            Maak een nieuwe toets aan. Voeg later secties en vragen toe.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -38,7 +47,7 @@ export function TestFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>Beschrijving (optioneel)</Label>
             <Textarea
               value={formData.description}
               onChange={(e) =>
@@ -55,10 +64,10 @@ export function TestFormDialog({
                   setFormData({ ...formData, is_public: checked })
                 }
               />
-              <Label>Publicly available</Label>
+              <Label>Openbaar beschikbaar</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Label>Max attempts:</Label>
+              <Label>Maximaal aantal pogingen:</Label>
               <Input
                 type="number"
                 min={1}
@@ -75,7 +84,7 @@ export function TestFormDialog({
             </div>
           </div>
           <Button onClick={handleSubmit} className="w-full">
-            Create Test
+            Nieuw Toets Aanmaken
           </Button>
         </div>
       </DialogContent>

@@ -13,6 +13,7 @@ use App\Models\TestAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TeacherController extends BaseController
 {
@@ -27,10 +28,16 @@ class TeacherController extends BaseController
     public function getTests(Request $request)
     {
         $tests = $request->user()->createdTests()
-            ->with(['sections.questions.answers'])
-            ->paginate($request->get('per_page', 15));
+            ->with(['sections' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions.answers' => function($query) {
+                $query->orderBy('order');
+            }])
+            ->get();
         
-        return response()->json($tests);
+        return response()->json(['data' => $tests]);
     }
 
     public function createTest(Request $request)
@@ -53,7 +60,7 @@ class TeacherController extends BaseController
             'max_attempts' => $request->max_attempts ?? 1,
         ]);
 
-        return response()->json($test, 201);
+        return response()->json(['data' => $test], 201);
     }
 
     public function updateTest(Request $request, $id)
@@ -73,7 +80,7 @@ class TeacherController extends BaseController
 
         $test->update($request->only(['title', 'description', 'is_public', 'max_attempts']));
 
-        return response()->json($test);
+        return response()->json(['data' => $test]);
     }
 
     public function deleteTest(Request $request, $id)
@@ -109,18 +116,46 @@ class TeacherController extends BaseController
             'new_page' => $request->new_page ?? false,
         ]);
 
-        return response()->json($section, 201);
+        return response()->json(['data' => $section], 201);
     }
 
-    public function deleteSection(Request $request, $sectionId)
+    public function updateSection(Request $request, $sectionId)
     {
         $section = Section::with('test')->findOrFail($sectionId);
         
         if ($section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'new_page' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $section->update($request->only(['title', 'description', 'new_page']));
+
+        return response()->json(['data' => $section]);
+    }
+
+    public function deleteSection(Request $request, $sectionId)
+    {
+        Log::info('Delete section called', ['section_id' => $sectionId, 'user_id' => $request->user()->id]);
+        
+        $section = Section::with('test')->findOrFail($sectionId);
+        
+        if ($section->test->teacher_id !== $request->user()->id) {
+            Log::warning('Unauthorized delete attempt');
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         
         $section->delete();
+        
+        Log::info('Section deleted successfully');
         
         return response()->json(['message' => 'Section deleted successfully']);
     }
@@ -152,18 +187,45 @@ class TeacherController extends BaseController
             'order' => $order,
         ]);
 
-        return response()->json($question, 201);
+        return response()->json(['data' => $question, 'id' => $question->id], 201);
     }
 
-    public function deleteQuestion(Request $request, $questionId)
+    public function updateQuestion(Request $request, $questionId)
     {
         $question = Question::with('section.test')->findOrFail($questionId);
         
         if ($question->section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
+
+        $validator = Validator::make($request->all(), [
+            'question_text' => 'sometimes|string',
+            'type' => 'sometimes|in:single_choice,multiple_choice,text',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $question->update($request->only(['question_text', 'type']));
+
+        return response()->json(['data' => $question]);
+    }
+
+    public function deleteQuestion(Request $request, $questionId)
+    {
+        Log::info('Delete question called', ['question_id' => $questionId, 'user_id' => $request->user()->id]);
+        
+        $question = Question::with('section.test')->findOrFail($questionId);
+        
+        if ($question->section->test->teacher_id !== $request->user()->id) {
+            Log::warning('Unauthorized delete attempt');
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         
         $question->delete();
+        
+        Log::info('Question deleted successfully');
         
         return response()->json(['message' => 'Question deleted successfully']);
     }
@@ -195,7 +257,29 @@ class TeacherController extends BaseController
             'order' => $order,
         ]);
 
-        return response()->json($answer, 201);
+        return response()->json(['data' => $answer], 201);
+    }
+
+    public function updateAnswer(Request $request, $answerId)
+    {
+        $answer = Answer::with('question.section.test')->findOrFail($answerId);
+        
+        if ($answer->question->section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'answer_text' => 'sometimes|string',
+            'is_correct' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $answer->update($request->only(['answer_text', 'is_correct']));
+
+        return response()->json(['data' => $answer]);
     }
 
     public function deleteAnswer(Request $request, $answerId)
@@ -219,9 +303,9 @@ class TeacherController extends BaseController
             ->with(['users' => function($query) {
                 $query->select('users.id', 'users.name', 'users.email');
             }])
-            ->paginate($request->get('per_page', 15));
+            ->get();
         
-        return response()->json($groups);
+        return response()->json(['data' => $groups]);
     }
 
     public function createGroup(Request $request)
@@ -240,7 +324,7 @@ class TeacherController extends BaseController
             'description' => $request->description,
         ]);
 
-        return response()->json($group, 201);
+        return response()->json(['data' => $group], 201);
     }
 
     public function updateGroup(Request $request, $id)
@@ -258,12 +342,16 @@ class TeacherController extends BaseController
 
         $group->update($request->only(['name', 'description']));
 
-        return response()->json($group);
+        return response()->json(['data' => $group]);
     }
 
     public function deleteGroup(Request $request, $id)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($id);
+        
+        // Detach all students and test assignments first
+        $group->users()->detach();
+        $group->tests()->detach();
         $group->delete();
         
         return response()->json(['message' => 'Group deleted successfully']);
@@ -289,6 +377,11 @@ class TeacherController extends BaseController
             return response()->json(['error' => 'User is not a student'], 422);
         }
 
+        // Check if student is already in group
+        if ($group->users()->where('user_id', $request->user_id)->exists()) {
+            return response()->json(['error' => 'Student already in group'], 422);
+        }
+
         $group->users()->attach($request->user_id);
 
         return response()->json(['message' => 'Student added to group']);
@@ -297,6 +390,12 @@ class TeacherController extends BaseController
     public function removeStudentFromGroup(Request $request, $groupId, $userId)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($groupId);
+        
+        // Check if student is in group
+        if (!$group->users()->where('user_id', $userId)->exists()) {
+            return response()->json(['error' => 'Student not in group'], 404);
+        }
+        
         $group->users()->detach($userId);
         
         return response()->json(['message' => 'Student removed from group']);
@@ -340,6 +439,12 @@ class TeacherController extends BaseController
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $student = User::where('id', $request->user_id)->where('role', 'student')->first();
+        
+        if (!$student) {
+            return response()->json(['error' => 'User is not a student'], 422);
+        }
+
         $groupName = "Individual_{$test->title}_{$request->user_id}";
         $group = Group::firstOrCreate([
             'name' => $groupName,
@@ -364,7 +469,9 @@ class TeacherController extends BaseController
         $groups = Group::where('teacher_id', $request->user()->id)
             ->with(['tests' => function($query) {
                 $query->withPivot('start_date', 'end_date', 'id');
-            }, 'users'])
+            }, 'users' => function($query) {
+                $query->select('users.id', 'users.name', 'users.email');
+            }])
             ->get();
 
         // Formatteer de data
@@ -421,6 +528,18 @@ class TeacherController extends BaseController
         return response()->json(['data' => $assignments]);
     }
 
+    // ==================== STUDENTS ====================
+    
+    public function getStudents(Request $request)
+    {
+        $students = User::where('role', 'student')
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+        
+        return response()->json(['data' => $students]);
+    }
+
     // ==================== RETAKE MANAGEMENT ====================
     
     public function getStudentsForRetake(Request $request, $testId)
@@ -442,17 +561,23 @@ class TeacherController extends BaseController
             $query->where('test_id', $testId)->latest();
         }])->get();
 
-       
-     return response()->json($students);
+        return response()->json(['data' => $students]);
     }
+
+    // ==================== GET SINGLE TEST WITH DETAILS ====================
     
-    public function getStudents(Request $request)
-{
-    // Haal alle studenten op (alleen basis informatie)
-    $students = User::where('role', 'student')
-        ->select('id', 'name', 'email')
-        ->get();
-    
-    return response()->json(['data' => $students]);
-}
+    public function getTest($id, Request $request)
+    {
+        $test = Test::where('teacher_id', $request->user()->id)
+            ->with(['sections' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions.answers' => function($query) {
+                $query->orderBy('order');
+            }])
+            ->findOrFail($id);
+        
+        return response()->json(['data' => $test]);
+    }
 }

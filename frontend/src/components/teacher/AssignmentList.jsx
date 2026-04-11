@@ -23,14 +23,14 @@ export function AssignmentList({ assignments, onOpenDialog }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Test Assignments</CardTitle>
+            <CardTitle>Toets Toewijzingen</CardTitle>
             <CardDescription>
-              Assign tests to groups or individual students
+              Hier kun je alle toewijzingen van toetsen aan groepen of individuele
             </CardDescription>
           </div>
           <Button onClick={onOpenDialog}>
             <Plus className="w-4 h-4 mr-2" />
-            New Assignment
+            Nieuwe Toewijzing
           </Button>
         </div>
       </CardHeader>
@@ -38,10 +38,10 @@ export function AssignmentList({ assignments, onOpenDialog }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Test</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
+              <TableHead>Toets</TableHead>
+              <TableHead>toewijzen Aan</TableHead>
+              <TableHead>Start Datum</TableHead>
+              <TableHead>Eind Datum</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,7 +68,7 @@ export function AssignmentList({ assignments, onOpenDialog }) {
             {assignments.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
-                  No assignments yet
+                  Geen toewijzingen gevonden
                 </TableCell>
               </TableRow>
             )}

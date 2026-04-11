@@ -21,12 +21,12 @@ export function GroupList({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>My Groups</CardTitle>
-            <CardDescription>Manage groups and students</CardDescription>
+            <CardTitle>Mijn Groepen</CardTitle>
+            <CardDescription>Beheer groepen en studenten</CardDescription>
           </div>
           <Button size="sm" onClick={onOpenDialog}>
             <Plus className="w-4 h-4 mr-2" />
-            New
+            Nieuw
           </Button>
         </div>
       </CardHeader>
@@ -34,7 +34,7 @@ export function GroupList({
         <div className="space-y-2">
           {groups.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-8">
-              No groups created yet
+              Geen groepen aangemaakt
             </p>
           ) : (
             groups.map((group) => (
@@ -56,7 +56,7 @@ export function GroupList({
                     <div className="flex items-center gap-1 mt-2">
                       <Users className="w-3 h-3 text-gray-500" />
                       <span className="text-xs text-gray-500">
-                        {group.users?.length || 0} students
+                        {group.users?.length || 0} studenten
                       </span>
                     </div>
                   </div>

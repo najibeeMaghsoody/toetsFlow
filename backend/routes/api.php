@@ -35,39 +35,50 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Teacher routes
     Route::middleware('role:teacher')->prefix('teacher')->group(function () {
-        // Test management
+        // ==================== TEST MANAGEMENT ====================
         Route::get('/tests', [TeacherController::class, 'getTests']);
+        Route::get('/tests/{id}', [TeacherController::class, 'getTest']);
         Route::post('/tests', [TeacherController::class, 'createTest']);
         Route::put('/tests/{id}', [TeacherController::class, 'updateTest']);
         Route::delete('/tests/{id}', [TeacherController::class, 'deleteTest']);
         
-        // Sections
+        // ==================== SECTION MANAGEMENT ====================
         Route::post('/tests/{testId}/sections', [TeacherController::class, 'addSection']);
+        Route::put('/sections/{sectionId}', [TeacherController::class, 'updateSection']);  // MISSEND!
+        Route::delete('/sections/{sectionId}', [TeacherController::class, 'deleteSection']); // MISSEND!
         
-        // Questions
+        // ==================== QUESTION MANAGEMENT ====================
         Route::post('/sections/{sectionId}/questions', [TeacherController::class, 'addQuestion']);
+        Route::put('/questions/{questionId}', [TeacherController::class, 'updateQuestion']); // MISSEND!
+        Route::delete('/questions/{questionId}', [TeacherController::class, 'deleteQuestion']); // MISSEND!
         
-        // Answers
+        // ==================== ANSWER MANAGEMENT ====================
         Route::post('/questions/{questionId}/answers', [TeacherController::class, 'addAnswer']);
+        Route::put('/answers/{answerId}', [TeacherController::class, 'updateAnswer']);
+        Route::delete('/answers/{answerId}', [TeacherController::class, 'deleteAnswer']);
         
-        // Group management
+        // ==================== GROUP MANAGEMENT ====================
         Route::get('/groups', [TeacherController::class, 'getGroups']);
         Route::post('/groups', [TeacherController::class, 'createGroup']);
         Route::put('/groups/{id}', [TeacherController::class, 'updateGroup']);
         Route::delete('/groups/{id}', [TeacherController::class, 'deleteGroup']);
         
-         Route::get('/students', [TeacherController::class, 'getStudents']);
-        // Group students
+        // ==================== STUDENTS ====================
+        Route::get('/students', [TeacherController::class, 'getStudents']);
+        
+        // ==================== GROUP STUDENTS ====================
         Route::post('/groups/{groupId}/students', [TeacherController::class, 'addStudentToGroup']);
         Route::delete('/groups/{groupId}/students/{userId}', [TeacherController::class, 'removeStudentFromGroup']);
         
-        // Assign tests
+        // ==================== ASSIGN TESTS ====================
         Route::post('/groups/{groupId}/tests/{testId}', [TeacherController::class, 'assignTestToGroup']);
         Route::post('/tests/{testId}/assign-student', [TeacherController::class, 'assignTestToStudent']);
         
-        // Retake management
-        Route::get('/tests/{testId}/retake-candidates', [TeacherController::class, 'getStudentsForRetake']);
+        // ==================== ASSIGNMENTS ====================
         Route::get('/assignments', [TeacherController::class, 'getAssignments']);
+        
+        // ==================== RETAKE MANAGEMENT ====================
+        Route::get('/tests/{testId}/students-for-retake', [TeacherController::class, 'getStudentsForRetake']);
     });
 
     // Student routes

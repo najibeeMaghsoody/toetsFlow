@@ -1,5 +1,11 @@
 // components/docent/AssignmentForm.jsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -32,9 +38,13 @@ export function AssignmentForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign Test</DialogTitle>
+          <DialogTitle>Toewijzen Toets</DialogTitle>
+          <DialogDescription>
+            Wijs een toets toe aan een groep of individuele student.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {/* Rest van je code blijft hetzelfde */}
           <div className="space-y-2">
             <Label>Test</Label>
             <Select
@@ -57,7 +67,7 @@ export function AssignmentForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Assign To</Label>
+            <Label>Toewijzen Aan</Label>
             <Select
               value={formData.type}
               onValueChange={(value) =>
@@ -73,15 +83,15 @@ export function AssignmentForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="group">Group</SelectItem>
-                <SelectItem value="student">Individual Student</SelectItem>
+                <SelectItem value="group">Groep</SelectItem>
+                <SelectItem value="student">Individuele Student</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {formData.type === "group" ? (
             <div className="space-y-2">
-              <Label>Group</Label>
+              <Label>Groep</Label>
               <Select
                 value={formData.groupId}
                 onValueChange={(value) =>
@@ -124,7 +134,7 @@ export function AssignmentForm({
           )}
 
           <div className="space-y-2">
-            <Label>Start Date</Label>
+            <Label>Start Datum</Label>
             <Input
               type="datetime-local"
               value={formData.startDate}
@@ -135,7 +145,7 @@ export function AssignmentForm({
           </div>
 
           <div className="space-y-2">
-            <Label>End Date</Label>
+            <Label>Eind Datum</Label>
             <Input
               type="datetime-local"
               value={formData.endDate}
@@ -146,7 +156,7 @@ export function AssignmentForm({
           </div>
 
           <Button onClick={handleSubmit} className="w-full">
-            Assign
+            Toewijzen
           </Button>
         </div>
       </DialogContent>

@@ -1,6 +1,6 @@
 // components/docent/ToetsenTab.jsx
-import { TestList } from "./TestList";
-import { TestDetails } from "./TestDetails";
+import { TestList } from './TestList';
+import { TestDetails } from './TestDetails';
 
 export function TestsTab({
   tests,

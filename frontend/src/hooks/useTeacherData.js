@@ -1,4 +1,4 @@
-// hooks/useTeacherData.js
+// hooks/useTeacherData.js - Eenvoudige versie (werkt prima!)
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
@@ -28,70 +28,18 @@ export function useTeacherData() {
   const [selectedTest, setSelectedTest] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
-  //   const loadAllData = useCallback(async () => {
-  //     setLoading(true);
-  //     try {
-  //       const [testsData, groupsData, studentsData, assignmentsData] =
-  //         await Promise.all([
-  //           getTests(),
-  //           getGroups(),
-  //           getStudents(),
-  //           getAssignments(),
-  //         ]);
-  //       setTests(testsData);
-  //       setGroups(groupsData);
-  //       setStudents(studentsData);
-  //       setAssignments(assignmentsData);
-
-  //       if (testsData.length > 0 && !selectedTest) {
-  //         setSelectedTest(testsData[0]);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading data:", error);
-  //       toast.error("Fout bij laden van gegevens");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }, [selectedTest]);
-  // hooks/useTeacherData.js
   const loadAllData = useCallback(async () => {
-    console.log("🔄 [useTeacherData] Loading data...");
+    console.log(" Loading data...");
     setLoading(true);
 
     try {
-      // Gebruik try/catch voor elke individuele call
-      let testsData = [];
-      let groupsData = [];
-      let studentsData = [];
-      let assignmentsData = [];
-
-      try {
-        testsData = await getTests();
-        console.log("✅ Tests loaded:", testsData.length);
-      } catch (e) {
-        console.error("Failed to load tests:", e);
-      }
-
-      try {
-        groupsData = await getGroups();
-        console.log("✅ Groups loaded:", groupsData.length);
-      } catch (e) {
-        console.error("Failed to load groups:", e);
-      }
-
-      try {
-        studentsData = await getStudents();
-        console.log("✅ Students loaded:", studentsData.length);
-      } catch (e) {
-        console.error("Failed to load students:", e);
-      }
-
-      try {
-        assignmentsData = await getAssignments();
-        console.log("✅ Assignments loaded:", assignmentsData.length);
-      } catch (e) {
-        console.error("Failed to load assignments:", e);
-      }
+      const [testsData, groupsData, studentsData, assignmentsData] =
+        await Promise.all([
+          getTests(),
+          getGroups(),
+          getStudents(),
+          getAssignments(),
+        ]);
 
       setTests(testsData || []);
       setGroups(groupsData || []);
@@ -102,10 +50,10 @@ export function useTeacherData() {
         setSelectedTest(testsData[0]);
       }
     } catch (error) {
-      console.error("❌ [useTeacherData] Error:", error);
+      console.error("Error loading data:", error);
+      toast.error("Fout bij laden van gegevens");
     } finally {
-      setLoading(false); // ← Dit is cruciaal! Zorg dat loading altijd false wordt
-      console.log("✅ [useTeacherData] Loading complete, loading = false");
+      setLoading(false);
     }
   }, [selectedTest]);
 
@@ -113,9 +61,14 @@ export function useTeacherData() {
     loadAllData();
   }, [loadAllData]);
 
+  // Refresh functies
   const refreshTests = async () => {
     const data = await getTests();
     setTests(data);
+    if (selectedTest) {
+      const updated = data.find((t) => t.id === selectedTest.id);
+      if (updated) setSelectedTest(updated);
+    }
     return data;
   };
 
@@ -131,6 +84,7 @@ export function useTeacherData() {
     return data;
   };
 
+  // CRUD operaties
   const createTest = async (testData) => {
     try {
       await addTest(testData);

@@ -1,5 +1,11 @@
-// components/docent/SectionFormDialog.jsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -24,7 +30,11 @@ export function SectionFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Section</DialogTitle>
+          <DialogTitle>Nieuwe Sectie</DialogTitle>
+          <DialogDescription>
+            Voeg een nieuwe sectie toe aan de toets. Secties kunnen bestaan uit
+            meerdere vragen.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -38,7 +48,7 @@ export function SectionFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>Description (optional)</Label>
+            <Label>Beschrijving (optioneel)</Label>
             <Textarea
               value={formData.description}
               onChange={(e) =>
@@ -54,10 +64,10 @@ export function SectionFormDialog({
                 setFormData({ ...formData, new_page: checked })
               }
             />
-            <Label>Start on new page</Label>
+            <Label>Nieuwe pagina</Label>
           </div>
           <Button onClick={handleSubmit} className="w-full">
-            Add Section
+            Nieuwe Sectie Toevoegen
           </Button>
         </div>
       </DialogContent>

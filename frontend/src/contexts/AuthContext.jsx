@@ -8,18 +8,18 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log("🔵 [AuthContext] Initializing");
+  console.log(" [AuthContext] Initializing");
 
   useEffect(() => {
-    console.log("🔵 [AuthContext] Running checkAuth");
+    console.log(" [AuthContext] Running checkAuth");
 
     // Eerst herstellen uit localStorage
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    console.log("🔵 [AuthContext] Token found:", token ? "Yes" : "No");
+    console.log(" [AuthContext] Token found:", token ? "Yes" : "No");
     console.log(
-      "🔵 [AuthContext] Stored user found:",
+      " [AuthContext] Stored user found:",
       storedUser ? "Yes" : "No",
     );
 
@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
       try {
         const parsedUser = JSON.parse(storedUser);
         console.log(
-          "🔵 [AuthContext] Restored user from localStorage:",
+          "[AuthContext] Restored user from localStorage:",
           parsedUser,
         );
         setUser(parsedUser);
@@ -39,11 +39,11 @@ export function AuthProvider({ children }) {
           .getCurrentUser()
           .then((userData) => {
             if (userData) {
-              console.log("✅ [AuthContext] Token validated, user:", userData);
+              console.log("[AuthContext] Token validated, user:", userData);
               setUser(userData);
               localStorage.setItem("user", JSON.stringify(userData));
             } else {
-              console.log("🔴 [AuthContext] Token invalid, clearing");
+              console.log(" [AuthContext] Token invalid, clearing");
               localStorage.removeItem("token");
               localStorage.removeItem("user");
               setUser(null);
@@ -51,26 +51,26 @@ export function AuthProvider({ children }) {
             }
           })
           .catch((error) => {
-            console.error("🔴 [AuthContext] Error validating token:", error);
+            console.error("[AuthContext] Error validating token:", error);
             // Blijf bij de localStorage user, maar log de error
           });
       } catch (e) {
         console.error(
-          "🔴 [AuthContext] Error parsing user from localStorage",
+          "[AuthContext] Error parsing user from localStorage",
           e,
         );
         setIsLoading(false);
       }
     } else {
-      console.log("🔵 [AuthContext] No stored credentials found");
+      console.log(" [AuthContext] No stored credentials found");
       setIsLoading(false);
     }
   }, []);
 
   const register = async (userData) => {
-    console.log("🔵 [AuthContext] Register called with:", userData);
+    console.log(" [AuthContext] Register called with:", userData);
     const result = await authService.register(userData);
-    console.log("✅ [AuthContext] Register result:", result);
+    console.log("[AuthContext] Register result:", result);
 
     if (result.success) {
       setUser(result.user);
@@ -80,9 +80,9 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    console.log("🔵 [AuthContext] Login called for:", email);
+    console.log(" [AuthContext] Login called for:", email);
     const result = await authService.login(email, password);
-    console.log("✅ [AuthContext] Login result:", result);
+    console.log(" [AuthContext] Login result:", result);
 
     if (result.success) {
       setUser(result.user);
@@ -92,11 +92,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    console.log("🔵 [AuthContext] Logout called");
+    console.log("[AuthContext] Logout called");
     await authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-    console.log("✅ [AuthContext] Logout complete");
+    console.log(" [AuthContext] Logout complete");
   };
 
   return (
