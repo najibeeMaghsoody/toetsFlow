@@ -1,4 +1,4 @@
-// components/Sidebar.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -172,12 +172,12 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Desktop Sidebar - altijd zichtbaar */}
+    
       <div className="hidden md:block w-64 shrink-0 h-screen sticky top-0">
         <SidebarContent />
       </div>
 
-      {/* Hamburger button - ALLEEN zichtbaar als mobiel menu gesloten is */}
+     
       {!isMobileMenuOpen && (
         <div className="md:hidden fixed top-4 left-4 z-60">
           <button
@@ -200,7 +200,7 @@ const Sidebar = () => {
         onClick={closeMenu}
       />
 
-      {/* Mobiele Sidebar - met close button */}
+      
       <div
         className={`fixed top-0 left-0 h-full w-64 transform transition-transform duration-300 ease-in-out md:hidden shadow-xl ${
           isMobileMenuOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"

@@ -15,29 +15,33 @@ import Register from "./pages/Register";
 import StudentDashboard from "./pages/student/Dashboard";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
+import TeacherResults from "./pages/teacher/Results";
+import TeacherStudents from "./pages/teacher/Students";
 
 function App() {
   return (
     <ErrorBoundary>
-    <AuthProvider>
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-
-        {/* Protected routes */}
-        <Route element={<PrivateRoute />}>
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={<DashboardRouter />} />
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <AuthProvider>
+        <Routes>
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
-        </Route>
-      </Routes>
-    </AuthProvider>
+
+          {/* Protected routes */}
+          <Route element={<PrivateRoute />}>
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/dashboard" element={<DashboardRouter />} />
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
+              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+              <Route path="/teacher/results" element={<TeacherResults />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/teacher/students" element={<TeacherStudents />} />
+            </Route>
+          </Route>
+        </Routes>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
@@ -62,7 +66,7 @@ function DashboardRouter() {
 
   console.log("🔵 [DashboardRouter] User role:", user.role);
 
-  // Direct renderen van de dashboard componenten ipv Navigate
+
   switch (user.role) {
     case "student":
       console.log("[DashboardRouter] Rendering StudentDashboard");

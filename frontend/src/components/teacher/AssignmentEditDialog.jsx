@@ -1,4 +1,4 @@
-// components/docent/AssignmentEditDialog.jsx
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -56,12 +56,11 @@ export function AssignmentEditDialog({
       setStartDate(formatDate(assignment.start_date));
       setEndDate(formatDate(assignment.end_date));
 
-      // Set test ID
+  
       setTestId(
         assignment.test_id?.toString() || assignment.test?.id?.toString() || "",
       );
 
-      // Bepaal het type op basis van de beschikbare data
       if (assignment.group_id || assignment.group) {
         setAssignmentType("group");
         setGroupId(
@@ -115,7 +114,6 @@ export function AssignmentEditDialog({
 
     setIsLoading(true);
 
-    // Bereid de update data voor - Gebruik de juiste veldnamen voor de backend
     const updateData = {
       start_date: startDate,
       end_date: endDate,

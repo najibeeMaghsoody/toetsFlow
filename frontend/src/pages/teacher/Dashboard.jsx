@@ -1,4 +1,4 @@
-// pages/docent/DocentDashboard.jsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
@@ -18,6 +18,7 @@ import { TestFormDialog } from "../../components/teacher/TestFormDialog";
 import { GroupFormDialog } from "../../components/teacher/GroupFormDialog";
 import { SectionFormDialog } from "../../components/teacher/SectionFormDialog";
 import { QuestionFormDialog } from "../../components/teacher/QuestionFormDialog";
+
 import { Button } from "../../components/ui/button";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { toast } from "sonner";
@@ -134,7 +135,7 @@ export function TeacherDashboard() {
     return success;
   };
 
-  // In Dashboard.jsx - vervang de bestaande handleUpdateSection
+
 
   const handleUpdateSection = async (sectionId, data) => {
     console.log(
@@ -145,19 +146,19 @@ export function TeacherDashboard() {
     );
     console.log("📝 handleUpdateSection - data:", data);
 
-    // Zorg dat we een geldig ID hebben
+
     let id = sectionId;
     if (typeof sectionId === "object" && sectionId !== null) {
       id = sectionId.id;
     }
 
     if (!id) {
-      console.error("❌ Geen geldig sectie ID");
+      console.error("Geen geldig sectie ID");
       toast.error("Kan sectie niet bijwerken: ongeldig ID");
       return false;
     }
 
-    console.log("📝 Calling updateSectionById with ID:", id);
+    console.log("Calling updateSectionById with ID:", id);
     const success = await updateSectionById(id, data);
     console.log("📝 updateSectionById result:", success);
 

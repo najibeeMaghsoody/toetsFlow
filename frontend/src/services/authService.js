@@ -1,4 +1,4 @@
-// services/authService.js
+
 import api from "./api";
 
 class AuthService {
@@ -75,7 +75,7 @@ class AuthService {
       console.log("[AuthService] Get user response:", response.data);
 
       if (response.data.success && response.data.user) {
-        // Update stored user
+    
         localStorage.setItem("user", JSON.stringify(response.data.user));
         return response.data.user;
       }

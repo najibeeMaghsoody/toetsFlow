@@ -39,7 +39,7 @@ export function QuestionFormDialog({
   useEffect(() => {
     if (open) {
       if (isEditing && initialData) {
-        // Zet bestaande antwoorden om
+     
         const answers = (initialData.answers || []).map((a) => ({
           text: a.answer_text || "",
           isCorrect: a.is_correct === true || a.is_correct === 1,
@@ -76,16 +76,16 @@ export function QuestionFormDialog({
     const newAnswers = [...formData.answers];
 
     if (field === "isCorrect") {
-      // Zorg dat value een boolean is
+
       const isChecked = value === true || value === "true";
 
       if (formData.type === "single_choice" && isChecked) {
-        // Single choice: alleen deze true, alle anderen false
+      
         newAnswers.forEach((_, i) => {
           newAnswers[i].isCorrect = i === index;
         });
       } else {
-        // Multiple choice: toggle de waarde
+
         newAnswers[index].isCorrect = isChecked;
       }
     } else {

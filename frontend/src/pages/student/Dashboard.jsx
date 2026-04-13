@@ -1,4 +1,4 @@
-// frontend/src/pages/student/Dashboard.jsx
+
 import React from "react";
 import { useAuth } from "../../contexts/AuthContext";
 

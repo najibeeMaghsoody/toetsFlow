@@ -10,7 +10,7 @@ const showNotification = (message, type = "success") => {
   console.log(`[${type}] ${message}`);
 };
 
-// State updaters
+
 let globalStateUpdaters = {
   updateTests: null,
   updateGroups: null,
@@ -592,5 +592,72 @@ export const getStudents = async () => {
     console.error("Fout bij laden studenten:", error);
     showNotification("Fout bij laden studenten", "error");
     return [];
+  }
+};
+
+
+// ============ RESULTS ============
+export const getTestResults = async (testId) => {
+  try {
+    const response = await api.get(`/teacher/tests/${testId}/results`);
+    return response.data.data || [];
+  } catch (error) {
+    showNotification("Fout bij laden resultaten", "error");
+    return [];
+  }
+};
+
+export const getStudentResultDetail = async (testId, studentId) => {
+  try {
+    const response = await api.get(
+      `/teacher/tests/${testId}/results/${studentId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    showNotification("Fout bij laden detail resultaten", "error");
+    throw error;
+  }
+};
+
+export const getAllStudentResults = async () => {
+  try {
+    const response = await api.get("/teacher/results/all");
+    return response.data.data || {};
+  } catch (error) {
+    showNotification("Fout bij laden alle resultaten", "error");
+    return {};
+  }
+};
+
+export const exportResultsToCsv = async (testId) => {
+  try {
+    const response = await api.get(`/teacher/tests/${testId}/export-csv`, {
+      responseType: "blob",
+    });
+
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+
+  
+    const contentDisposition = response.headers["content-disposition"];
+    let filename = `resultaten_${testId}.csv`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match) filename = match[1];
+    }
+
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    showNotification("Export succesvol gestart", "success");
+    return true;
+  } catch (error) {
+    showNotification("Fout bij exporteren resultaten", "error");
+    throw error;
   }
 };

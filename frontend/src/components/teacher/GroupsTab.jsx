@@ -1,4 +1,4 @@
-// components/docent/GroupsTab.jsx
+
 import { useState } from "react";
 import { GroupList } from "./GroupList";
 import { GroupDetails } from "./GroupDetails";

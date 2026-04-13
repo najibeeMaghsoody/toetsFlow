@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/Api/TeacherController.php
+
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Routing\Controller as BaseController;
@@ -8,6 +8,7 @@ use App\Models\Section;
 use App\Models\Question;
 use App\Models\Answer;
 use App\Models\Group;
+use App\Models\TestAttempt;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -737,5 +738,217 @@ class TeacherController extends BaseController
             ->get();
         
         return response()->json(['data' => $students]);
+    }
+
+    // ==================== RESULTS MANAGEMENT ====================
+
+  
+    public function getTestResults(Request $request, $testId)
+    {
+        $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
+       
+        $maxScore = $this->getMaxScoreForTest($test);
+        
+        $results = TestAttempt::where('test_id', $testId)
+            ->with(['user' => function($query) {
+                $query->select('id', 'name', 'email');
+            }])
+            ->get()
+            ->map(function($attempt) use ($maxScore) {
+              
+                $score = $attempt->score ?? 0;
+                
+                return [
+                    'attempt_id' => $attempt->id,
+                    'student_id' => $attempt->user_id,
+                    'student_name' => $attempt->user->name,
+                    'student_email' => $attempt->user->email,
+                    'started_at' => $attempt->started_at,
+                    'completed_at' => $attempt->completed_at,
+                    'score' => (float)$score,
+                    'max_score' => $maxScore,
+                    'percentage' => $maxScore > 0 ? ((float)$score / $maxScore) * 100 : 0,
+                    'attempts_count' => $attempt->attempts_count,
+                    'status' => $attempt->completed_at ? 'completed' : 'in_progress',
+                ];
+            });
+        
+        return response()->json(['data' => $results]);
+    }
+
+    /**
+     * Haal gedetailleerde resultaten op voor een specifieke student en toets
+     */
+    public function getStudentResultDetail(Request $request, $testId, $studentId)
+    {
+        $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
+        
+        $attempt = TestAttempt::where('test_id', $testId)
+            ->where('user_id', $studentId)
+            ->with(['user', 'userAnswers.question.answers' => function($query) {
+                $query->where('is_correct', true);
+            }])
+            ->first();
+        
+        if (!$attempt) {
+            return response()->json(['error' => 'Geen poging gevonden'], 404);
+        }
+        
+        $maxScore = $this->getMaxScoreForTest($test);
+        $score = $attempt->score ?? 0;
+        
+        $questions = [];
+        foreach ($attempt->userAnswers as $userAnswer) {
+            $question = $userAnswer->question;
+            $correctAnswer = $question->answers->first();
+            
+            $questions[] = [
+                'question_id' => $question->id,
+                'question_text' => $question->question_text,
+                'type' => $question->type,
+                'user_answer' => $userAnswer->answer_text ?? $userAnswer->text_answer,
+                'is_correct' => $userAnswer->is_correct ?? false,
+                'correct_answer' => $correctAnswer ? $correctAnswer->answer_text : null,
+                'points' => ($userAnswer->is_correct ?? false) ? 1 : 0,
+                'max_points' => 1,
+            ];
+        }
+        
+        return response()->json([
+            'data' => [
+                'student' => [
+                    'id' => $attempt->user->id,
+                    'name' => $attempt->user->name,
+                    'email' => $attempt->user->email,
+                ],
+                'test' => [
+                    'id' => $test->id,
+                    'title' => $test->title,
+                    'description' => $test->description,
+                ],
+                'attempt' => [
+                    'id' => $attempt->id,
+                    'started_at' => $attempt->started_at,
+                    'completed_at' => $attempt->completed_at,
+                    'score' => (float)$score,
+                    'max_score' => $maxScore,
+                    'percentage' => $maxScore > 0 ? ((float)$score / $maxScore) * 100 : 0,
+                    'attempts_count' => $attempt->attempts_count,
+                ],
+                'questions' => $questions,
+            ]
+        ]);
+    }
+
+    /**
+     * Haal alle resultaten op voor alle toetsen van de docent
+     */
+    public function getAllStudentResults(Request $request)
+    {
+        $teacherId = $request->user()->id;
+        
+        $tests = Test::where('teacher_id', $teacherId)->get();
+        $testIds = $tests->pluck('id')->toArray();
+        
+        $results = TestAttempt::whereIn('test_id', $testIds)
+            ->with(['user', 'test'])
+            ->get()
+            ->groupBy('test_id')
+            ->map(function($attempts, $testId) use ($tests) {
+                $test = $tests->firstWhere('id', $testId);
+                $maxScore = $this->getMaxScoreForTest($test);
+                
+                return [
+                    'test_id' => $testId,
+                    'test_title' => $test->title ?? 'Onbekend',
+                    'students' => $attempts->map(function($attempt) use ($maxScore) {
+                        $score = $attempt->score ?? 0;
+                        return [
+                            'student_id' => $attempt->user_id,
+                            'student_name' => $attempt->user->name,
+                            'student_email' => $attempt->user->email,
+                            'score' => (float)$score,
+                            'max_score' => $maxScore,
+                            'percentage' => $maxScore > 0 ? ((float)$score / $maxScore) * 100 : 0,
+                            'completed_at' => $attempt->completed_at,
+                            'attempts_count' => $attempt->attempts_count,
+                        ];
+                    })->values()
+                ];
+            });
+        
+        return response()->json(['data' => $results]);
+    }
+
+    /**
+     * Exporteer resultaten naar CSV bestand
+     */
+    public function exportResultsToCsv(Request $request, $testId)
+    {
+        $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
+        $maxScore = $this->getMaxScoreForTest($test);
+        
+        $results = TestAttempt::where('test_id', $testId)
+            ->with('user')
+            ->get()
+            ->map(function($attempt) use ($maxScore) {
+                $score = $attempt->score ?? 0;
+                return [
+                    'Student Naam' => $attempt->user->name,
+                    'Student Email' => $attempt->user->email,
+                    'Start Datum' => $attempt->started_at,
+                    'Voltooid Datum' => $attempt->completed_at ?? 'Niet voltooid',
+                    'Score' => $score,
+                    'Max Score' => $maxScore,
+                    'Percentage' => $maxScore > 0 ? round(((float)$score / $maxScore) * 100, 1) . '%' : '0%',
+                    'Pogingen' => $attempt->attempts_count,
+                    'Status' => $attempt->completed_at ? 'Voltooid' : 'In uitvoering',
+                ];
+            });
+        
+        $filename = "resultaten_{$test->title}_" . date('Y-m-d') . ".csv";
+        
+        $callback = function() use ($results) {
+            $file = fopen('php://output', 'w');
+            // Voeg BOM toe voor UTF-8 ondersteuning in Excel
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            if ($results->isNotEmpty()) {
+                fputcsv($file, array_keys($results->first()), ';');
+            }
+            
+            foreach ($results as $row) {
+                fputcsv($file, array_values($row), ';');
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
+    }
+
+    /**
+     * Helper functie om het maximale aantal punten voor een toets te berekenen
+     * Dit kan worden aangepast op basis van jouw toetsstructuur
+     */
+    private function getMaxScoreForTest($test)
+    {
+        // Optie 1: Tel het aantal vragen in de toets (elke vraag is 1 punt)
+        $questionCount = 0;
+        if ($test->sections) {
+            foreach ($test->sections as $section) {
+                $questionCount += $section->questions->count();
+            }
+        }
+        
+        if ($questionCount > 0) {
+            return $questionCount;
+        }
+        
+        
+        return 10;
     }
 }

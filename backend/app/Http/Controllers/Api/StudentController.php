@@ -237,13 +237,13 @@ class StudentController extends Controller
         return response()->json($details);
     }
 
-    // Retake test with only incorrect questions
+
     public function retakeIncorrect(Request $request, $testId)
     {
         $user = $request->user();
         $test = Test::findOrFail($testId);
 
-        // Get the last attempt
+       
         $lastAttempt = TestAttempt::where('user_id', $user->id)
             ->where('test_id', $testId)
             ->whereNotNull('completed_at')
@@ -254,7 +254,7 @@ class StudentController extends Controller
             return response()->json(['error' => 'No previous attempt found'], 404);
         }
 
-        // Get incorrect questions from last attempt
+       
         $incorrectQuestionIds = UserAnswer::where('test_attempt_id', $lastAttempt->id)
             ->where('is_correct', false)
             ->pluck('question_id')
@@ -264,7 +264,6 @@ class StudentController extends Controller
             return response()->json(['message' => 'All questions were answered correctly!'], 200);
         }
 
-        // Create new attempt
         $attemptCount = TestAttempt::where('user_id', $user->id)
             ->where('test_id', $testId)
             ->count();
@@ -280,7 +279,7 @@ class StudentController extends Controller
             'attempts_count' => $attemptCount + 1,
         ]);
 
-        // Load only incorrect questions
+
         $test->load(['sections.questions' => function($query) use ($incorrectQuestionIds) {
             $query->whereIn('id', $incorrectQuestionIds)
                   ->with('answers');

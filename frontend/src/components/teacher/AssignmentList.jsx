@@ -1,4 +1,4 @@
-// components/docent/AssignmentList.jsx
+
 import {
   Card,
   CardContent,

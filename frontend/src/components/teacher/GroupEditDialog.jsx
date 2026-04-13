@@ -1,4 +1,4 @@
-// components/docent/GroupEditDialog.jsx
+
 import { useState, useEffect } from "react";
 import {
   Dialog,

@@ -81,14 +81,14 @@ export function useTeacherData() {
 
   // ============ REFRESH FUNCTIES ============
   const refreshTests = useCallback(async () => {
-    console.log("🔄 Refreshing tests...");
+    console.log("Refreshing tests...");
     const data = await getTests();
     setTests(data);
 
     if (selectedTest) {
       const updatedTest = data.find((t) => t.id === selectedTest.id);
       if (updatedTest) {
-        console.log("✅ Updating selected test with fresh data:", updatedTest);
+        console.log("Updating selected test with fresh data:", updatedTest);
         setSelectedTest(updatedTest);
       }
     }
@@ -96,7 +96,7 @@ export function useTeacherData() {
   }, [selectedTest]);
 
   const refreshGroups = useCallback(async () => {
-    console.log("🔄 Refreshing groups...");
+    console.log("Refreshing groups...");
     const data = await getGroups();
     setGroups(data);
 
@@ -108,7 +108,7 @@ export function useTeacherData() {
   }, [selectedGroup]);
 
   const refreshAssignments = useCallback(async () => {
-    console.log("🔄 Refreshing assignments...");
+    console.log("Refreshing assignments...");
     const data = await getAssignments();
     setAssignments(data);
     return data;
@@ -131,17 +131,17 @@ export function useTeacherData() {
   const updateTestById = async (id, data) => {
     try {
       const testId = typeof id === "object" ? id.id : id;
-      console.log("📝 Updating test with ID:", testId);
-      console.log("📝 Update data:", data);
+      console.log("Updating test with ID:", testId);
+      console.log("Update data:", data);
 
       await updateTest(testId, data);
       await refreshTests();
 
-      console.log("✅ Test updated and data refreshed");
+      console.log("Test updated and data refreshed");
       toast.success("Toets succesvol bijgewerkt");
       return true;
     } catch (error) {
-      console.error("❌ Error in updateTestById:", error);
+      console.error("Error in updateTestById:", error);
       toast.error(error.response?.data?.message || "Fout bij bijwerken toets");
       return false;
     }

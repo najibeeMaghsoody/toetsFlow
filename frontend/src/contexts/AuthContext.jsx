@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     console.log(" [AuthContext] Running checkAuth");
 
-    // Eerst herstellen uit localStorage
+
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
           })
           .catch((error) => {
             console.error("[AuthContext] Error validating token:", error);
-            // Blijf bij de localStorage user, maar log de error
+            
           });
       } catch (e) {
         console.error(

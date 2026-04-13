@@ -1,4 +1,4 @@
-// components/teacher/SectionFormDialog.jsx
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -55,15 +55,15 @@ export function SectionFormDialog({
       return;
     }
 
-    console.log("📝 SectionFormDialog - handleSubmit called");
-    console.log("📝 isEditing:", isEditing);
-    console.log("📝 initialData:", initialData);
-    console.log("📝 testId:", testId);
-    console.log("📝 formData:", formData);
-    console.log("📝 onSubmit type:", typeof onSubmit);
+    console.log("SectionFormDialog - handleSubmit called");
+    console.log("isEditing:", isEditing);
+    console.log("initialData:", initialData);
+    console.log("testId:", testId);
+    console.log("formData:", formData);
+    console.log("onSubmit type:", typeof onSubmit);
 
     if (typeof onSubmit !== "function") {
-      console.error("❌ onSubmit is not a function!");
+      console.error("onSubmit is not a function!");
       toast.error("Er is een configuratiefout");
       return;
     }
@@ -77,32 +77,32 @@ export function SectionFormDialog({
       };
 
       let success;
-
+      
       if (isEditing) {
-        // Voor editing: eerste parameter is het ID, tweede is de data
+       
         if (!initialData || !initialData.id) {
-          console.error("❌ No section ID available for edit");
+          console.error("No section ID available for edit");
           toast.error("Kan sectie niet bewerken: ID ontbreekt");
           setIsLoading(false);
           return;
         }
-
+        
         console.log("📝 Calling onSubmit with ID:", initialData.id);
         success = await onSubmit(initialData.id, submitData);
       } else {
         // Voor create: alleen de data doorgeven
         if (!testId) {
-          console.error("❌ No test ID available for create");
+          console.error("No test ID available for create");
           toast.error("Kan sectie niet toevoegen: toets ID ontbreekt");
           setIsLoading(false);
           return;
         }
-
-        console.log("📝 Calling onSubmit with data only");
+        
+        console.log("Calling onSubmit with data only");
         success = await onSubmit(submitData);
       }
-
-      console.log("📝 SectionFormDialog - onSubmit returned:", success);
+      
+      console.log("SectionFormDialog - onSubmit returned:", success);
 
       if (success !== false) {
         onOpenChange(false);
@@ -115,7 +115,7 @@ export function SectionFormDialog({
         }
       }
     } catch (error) {
-      console.error("❌ SectionFormDialog - Error:", error);
+      console.error("SectionFormDialog - Error:", error);
       toast.error(error.response?.data?.message || "Er is een fout opgetreden");
     } finally {
       setIsLoading(false);

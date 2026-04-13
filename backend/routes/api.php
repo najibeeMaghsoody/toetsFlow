@@ -1,5 +1,5 @@
 <?php
-// routes/api.php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
@@ -81,5 +81,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Students
     Route::get('/students', [TeacherController::class, 'getStudents']);
+
+    // Results
+    Route::get('/tests/{testId}/results', [TeacherController::class, 'getTestResults']);
+    Route::get('/tests/{testId}/results/{studentId}', [TeacherController::class, 'getStudentResultDetail']);
+    Route::get('/results/all', [TeacherController::class, 'getAllStudentResults']);
+    Route::get('/tests/{testId}/export-csv', [TeacherController::class, 'exportResultsToCsv']);
+ 
 });
 });

@@ -1,4 +1,4 @@
-// frontend/src/pages/Register.jsx
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
@@ -39,7 +39,7 @@ export function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
 
-  // Clear alert na 5 seconden
+
   useEffect(() => {
     if (alertMessage.message) {
       const timer = setTimeout(() => {
@@ -55,19 +55,18 @@ export function Register() {
     }
   }, [alertMessage]);
 
-  // Clear field errors when user starts typing
   const handleFieldChange = (field, value) => {
     if (field === "name") setName(value);
     if (field === "email") setEmail(value);
     if (field === "password") setPassword(value);
     if (field === "passwordConfirmation") setPasswordConfirmation(value);
 
-    // Clear error for this field
+
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: null }));
     }
 
-    // Clear alert when user starts typing
+   
     if (alertMessage.message) {
       setAlertMessage({
         type: null,
@@ -81,11 +80,11 @@ export function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Reset messages
+  
     setAlertMessage({ type: null, title: null, message: null, details: null });
     setFieldErrors({});
 
-    // Client-side validatie
+   
     if (!email || !password || !name) {
       setAlertMessage({
         type: "warning",
@@ -152,12 +151,11 @@ export function Register() {
         });
         toast.success("Account aangemaakt! Je kunt nu inloggen.");
 
-        // Redirect na 2 seconden zodat gebruiker de melding kan zien
         setTimeout(() => {
           navigate("/login?registered=true");
         }, 2000);
       } else {
-        // Verwerk verschillende soorten fouten
+    
         let errorTitle = "Registratie mislukt";
         let errorMessage =
           "Er is een probleem opgetreden bij het aanmaken van je account.";
@@ -165,7 +163,7 @@ export function Register() {
         let fieldErrorMap = {};
 
         if (result.errors) {
-          // Validatiefouten van de backend
+          
           errorTitle = "Validatiefout";
           errorMessage = "Er zijn problemen met de ingevoerde gegevens:";
 
@@ -187,7 +185,7 @@ export function Register() {
         } else if (result.message) {
           errorMessage = result.message;
 
-          // Specifieke foutmeldingen
+        
           if (
             result.message.includes("already been taken") ||
             result.message.includes("bestaat al")
@@ -223,7 +221,7 @@ export function Register() {
     }
   };
 
-  // Helper om icoon te tonen bij alert
+  
   const getAlertIcon = (type) => {
     switch (type) {
       case "success":

@@ -1,4 +1,4 @@
-// components/docent/GroupList.jsx
+
 import { Button } from "../ui/button";
 import {
   Card,

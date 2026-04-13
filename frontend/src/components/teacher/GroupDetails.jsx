@@ -1,4 +1,4 @@
-// components/docent/GroupDetails.jsx
+
 import { useState } from "react";
 import {
   Card,

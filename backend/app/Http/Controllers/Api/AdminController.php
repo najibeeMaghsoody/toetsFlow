@@ -21,7 +21,7 @@ class AdminController extends Controller
     {
     }
 
-    // User Management
+
     public function getUsers(Request $request)
     {
         $query = User::with(['student', 'teacher', 'admin']);
@@ -55,7 +55,7 @@ class AdminController extends Controller
             'role' => $request->role,
         ]);
 
-        // Create role-specific record
+   
         if ($request->role === 'student') {
             Student::create([
                 'user_id' => $user->id,
@@ -105,7 +105,7 @@ class AdminController extends Controller
         return response()->json(['message' => 'User deleted successfully']);
     }
 
-    // Import students from CSV
+
     public function importStudents(Request $request)
     {
         $request->validate([
@@ -155,7 +155,7 @@ class AdminController extends Controller
         ]);
     }
 
-    // Statistics
+  
     public function getStatistics()
     {
         $stats = [
@@ -172,7 +172,7 @@ class AdminController extends Controller
         return response()->json($stats);
     }
 
-    // Export results
+   
     public function exportResults(Request $request)
     {
         $request->validate([

@@ -1,4 +1,4 @@
-// frontend/src/pages/Login.jsx
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -41,7 +41,7 @@ const Login = () => {
   const justRegistered = searchParams.get("registered");
   const justLoggedOut = searchParams.get("loggedout");
 
-  // Toon melding als net geregistreerd
+
   useEffect(() => {
     if (justRegistered) {
       setAlertMessage({
@@ -53,7 +53,7 @@ const Login = () => {
     }
   }, [justRegistered]);
 
-  // Toon melding als net uitgelogd
+  
   useEffect(() => {
     if (justLoggedOut) {
       setAlertMessage({
@@ -65,7 +65,7 @@ const Login = () => {
     }
   }, [justLoggedOut]);
 
-  // Clear alert na 5 seconden
+ 
   useEffect(() => {
     if (alertMessage.message) {
       const timer = setTimeout(() => {
@@ -78,7 +78,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validatie
+
     if (!email || !password) {
       setAlertMessage({
         type: "warning",
@@ -135,7 +135,6 @@ const Login = () => {
           errorMessage = errors.join(", ");
         }
 
-        // Specifieke foutmeldingen voor betere UX
         if (errorMessage.toLowerCase().includes("email")) {
           errorTitle = "E-mailadres niet gevonden";
           errorMessage =
@@ -167,7 +166,7 @@ const Login = () => {
     }
   };
 
-  // Helper om icoon te tonen bij alert
+
   const getAlertIcon = (type) => {
     switch (type) {
       case "success":

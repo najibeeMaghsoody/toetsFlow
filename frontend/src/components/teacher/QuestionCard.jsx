@@ -1,4 +1,4 @@
-// components/docent/QuestionCard.jsx
+
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
 

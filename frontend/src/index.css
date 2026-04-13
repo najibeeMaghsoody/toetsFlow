@@ -1,13 +1,9 @@
 @import "tailwindcss";
 
-/* Unieke custom styling voor Toets Management Systeem */
 
-/* Gradient hero background - directe kleuren zonder variabelen */
 .gradient-hero {
   background: linear-gradient(135deg, #7c3aed 0%, #6c2bd9 50%, #0ea5e9 100%);
 }
-
-/* Pattern dots - meer zichtbaar maken */
 .pattern-dots {
   background-image: radial-gradient(
     circle,
@@ -18,7 +14,7 @@
   background-position: 0 0;
 }
 
-/* Glassmorphism effect voor cards - meer transparant */
+
 .glass-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -26,8 +22,7 @@
   box-shadow: 0 8px 32px rgba(108, 43, 217, 0.15);
 }
 
-/* Rest van je CSS blijft hetzelfde */
-/* Gradient backgrounds */
+
 .gradient-primary {
   background: linear-gradient(135deg, #6c2bd9 0%, #8b5cf6 100%);
 }
@@ -36,7 +31,7 @@
   background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
 }
 
-/* Floating animation */
+
 @keyframes float {
   0%,
   100% {
@@ -51,7 +46,7 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Pulse glow effect */
+
 @keyframes pulse-glow {
   0%,
   100% {
@@ -66,7 +61,7 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Hover lift effect */
+
 .hover-lift {
   transition:
     transform 0.3s ease,
@@ -78,7 +73,7 @@
   box-shadow: 0 12px 24px rgba(108, 43, 217, 0.15);
 }
 
-/* Custom scrollbar */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -98,12 +93,12 @@
   background: linear-gradient(135deg, #5b21b6 0%, #6c2bd9 100%);
 }
 
-/* Icon glow effect */
+
 .icon-glow {
   filter: drop-shadow(0 0 8px rgba(108, 43, 217, 0.4));
 }
 
-/* Ripple effect voor buttons */
+
 @keyframes ripple {
   0% {
     transform: scale(0);
@@ -138,7 +133,7 @@
   animation: ripple 0.6s ease-out;
 }
 
-/* Custom focus ring met gradient */
+
 .focus-gradient:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(108, 43, 217, 0.3);
@@ -147,7 +142,6 @@
 :root {
   --font-size: 16px;
 
-  /* Uniek kleurenschema: Paars-Violet met Turquoise accenten */
   --background: #faf8ff;
   --foreground: #1a0b2e;
 
@@ -157,11 +151,10 @@
   --popover: #ffffff;
   --popover-foreground: #1a0b2e;
 
-  /* Hoofdkleur: Diep violet/paars */
+  
   --primary: #6c2bd9;
   --primary-foreground: #ffffff;
 
-  /* Secundair: Turquoise accent */
   --secondary: #e0f2fe;
   --secondary-foreground: #0c4a6e;
 
@@ -184,14 +177,13 @@
 
   --ring: #6c2bd9;
 
-  /* Custom kleuren voor grafieken */
   --chart-1: #6c2bd9;
   --chart-2: #0ea5e9;
   --chart-3: #8b5cf6;
   --chart-4: #06b6d4;
   --chart-5: #a78bfa;
 
-  /* Grotere border radius voor moderne look */
+
   --radius: 0.875rem;
 
   --sidebar: #ffffff;

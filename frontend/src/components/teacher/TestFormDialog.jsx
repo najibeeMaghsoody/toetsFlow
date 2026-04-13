@@ -1,4 +1,4 @@
-// components/teacher/TestFormDialog.jsx
+
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -33,7 +33,7 @@ export function TestFormDialog({
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Bepaal welke formData we gebruiken
+
   const formData = externalFormData || localFormData;
   const setFormData = externalSetFormData || setLocalFormData;
 
@@ -59,7 +59,7 @@ export function TestFormDialog({
   }, [initialData, isEditing, open, externalFormData]);
 
   const handleSubmit = async () => {
-    // Controleer of onSubmit een functie is
+
     if (typeof onSubmit !== "function") {
       console.error("onSubmit is not a function!", onSubmit);
       toast.error(
