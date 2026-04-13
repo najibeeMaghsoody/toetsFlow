@@ -231,7 +231,7 @@ export function GroupDetails({ group, students, onToggleStudent }) {
                   <label className="flex items-center gap-3 flex-1 cursor-pointer">
                     <Checkbox
                       checked={isInGroup}
-                      onChange={() =>
+                      onCheckedChange={() =>
                         handleToggleStudent(student.id, isInGroup)
                       }
                       disabled={isLoading}

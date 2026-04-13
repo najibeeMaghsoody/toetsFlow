@@ -539,7 +539,7 @@ export const updateAssignment = async (id, assignmentData) => {
       payload.user_id = assignmentData.user_id;
     }
 
-    console.log("📦 PUT payload:", payload);
+    console.log("PUT payload:", payload);
 
     const response = await api.put(`/teacher/assignments/${id}`, payload);
 
