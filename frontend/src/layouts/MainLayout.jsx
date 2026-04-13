@@ -7,8 +7,6 @@ import Sidebar from "../components/Sidebar";
 const MainLayout = () => {
   const { user } = useAuth();
 
-  console.log("🔵 [MainLayout] Rendering with user:", user?.role);
-
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar role={user?.role} />

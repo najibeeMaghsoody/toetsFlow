@@ -49,8 +49,7 @@ const Sidebar = () => {
         return [
           { name: "Toetsen", path: "/teacher/dashboard", icon: Calendar },
           { name: "Resultaten", path: "/teacher/results", icon: BarChart3 },
-          { name: "Groepen", path: "/teacher/groups", icon: Users },
-          { name: "Studenten", path: "/teacher/students", icon: Briefcase },
+          { name: "Studenten", path: "/teacher/students", icon: Users },
         ];
       case "student":
         return [

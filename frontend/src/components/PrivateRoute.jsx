@@ -19,11 +19,9 @@ const PrivateRoute = () => {
   }
 
   if (!user) {
-    console.log("🔴 [PrivateRoute] No user, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
-  console.log("✅ [PrivateRoute] User authenticated, rendering outlet");
   return <Outlet />;
 };
 

@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-
+import ErrorBoundary from "./components/ErrorBoundary";
 // Layouts
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 
 function App() {
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <Routes>
         <Route element={<AuthLayout />}>
@@ -37,6 +38,7 @@ function App() {
         </Route>
       </Routes>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

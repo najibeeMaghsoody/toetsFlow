@@ -1,3 +1,4 @@
+// components/docent/AssignmentEditDialog.jsx
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -16,128 +17,138 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Calendar, Clock, Users, FileText, Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
-export function AssignmentForm({
+export function AssignmentEditDialog({
   open,
   onOpenChange,
+  assignment,
   tests = [],
   groups = [],
   students = [],
-  initialData = null,
-  onSubmit,
-  isEditing = false,
+  onUpdate,
+  onDelete,
 }) {
-  const [formData, setFormData] = useState({
-    testId: "",
-    type: "group",
-    groupId: "",
-    studentId: "",
-    startDate: "",
-    endDate: "",
-  });
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [testId, setTestId] = useState("");
+  const [assignmentType, setAssignmentType] = useState("group");
+  const [groupId, setGroupId] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      if (isEditing && initialData) {
-        const formatDate = (dateString) => {
-          if (!dateString) return "";
-          try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return "";
-            return date.toISOString().slice(0, 16);
-          } catch (e) {
-            return "";
-          }
-        };
+    if (assignment) {
+      const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16);
+      };
+      setStartDate(formatDate(assignment.start_date));
+      setEndDate(formatDate(assignment.end_date));
 
-        let assignmentType = "group";
-        let groupId = "";
-        let studentId = "";
+      // Set test ID
+      setTestId(
+        assignment.test_id?.toString() || assignment.test?.id?.toString() || "",
+      );
 
-        if (initialData.group_id || initialData.group) {
-          assignmentType = "group";
-          groupId =
-            initialData.group_id?.toString() ||
-            initialData.group?.id?.toString() ||
-            "";
-        } else if (initialData.user_id || initialData.user) {
-          assignmentType = "student";
-          studentId =
-            initialData.user_id?.toString() ||
-            initialData.user?.id?.toString() ||
-            "";
-        }
-
-        setFormData({
-          testId:
-            initialData.test_id?.toString() ||
-            initialData.test?.id?.toString() ||
+      // Bepaal het type op basis van de beschikbare data
+      if (assignment.group_id || assignment.group) {
+        setAssignmentType("group");
+        setGroupId(
+          assignment.group_id?.toString() ||
+            assignment.group?.id?.toString() ||
             "",
-          type: assignmentType,
-          groupId: groupId,
-          studentId: studentId,
-          startDate: formatDate(initialData.start_date),
-          endDate: formatDate(initialData.end_date),
-        });
-      } else {
-        setFormData({
-          testId: "",
-          type: "group",
-          groupId: "",
-          studentId: "",
-          startDate: "",
-          endDate: "",
-        });
+        );
+        setStudentId("");
+      } else if (assignment.user_id || assignment.user) {
+        setAssignmentType("student");
+        setStudentId(
+          assignment.user_id?.toString() ||
+            assignment.user?.id?.toString() ||
+            "",
+        );
+        setGroupId("");
       }
     }
-  }, [initialData, isEditing, open]);
+  }, [assignment]);
 
-  const handleSubmit = async () => {
-    if (!formData.testId) {
-      toast.error("Selecteer een toets");
-      return;
-    }
-    if (!formData.startDate) {
-      toast.error("Selecteer een start datum");
-      return;
-    }
-    if (!formData.endDate) {
-      toast.error("Selecteer een eind datum");
+  if (!assignment) return null;
+
+  const handleUpdate = async () => {
+    if (!startDate || !endDate) {
+      toast.error("Start datum en eind datum zijn verplicht");
       return;
     }
 
-    const start = new Date(formData.startDate);
-    const end = new Date(formData.endDate);
+    const start = new Date(startDate);
+    const end = new Date(endDate);
 
     if (end <= start) {
       toast.error("Eind datum moet na start datum zijn");
       return;
     }
 
-    if (formData.type === "group" && !formData.groupId) {
+    if (!testId) {
+      toast.error("Selecteer een toets");
+      return;
+    }
+
+    if (assignmentType === "group" && !groupId) {
       toast.error("Selecteer een groep");
       return;
     }
 
-    if (formData.type === "student" && !formData.studentId) {
+    if (assignmentType === "student" && !studentId) {
       toast.error("Selecteer een student");
       return;
     }
 
     setIsLoading(true);
-    try {
-      const success = await onSubmit(formData);
+
+    // Bereid de update data voor - Gebruik de juiste veldnamen voor de backend
+    const updateData = {
+      start_date: startDate,
+      end_date: endDate,
+      test_id: parseInt(testId),
+      type: assignmentType,
+    };
+
+    if (assignmentType === "group") {
+      updateData.group_id = parseInt(groupId);
+    } else {
+      updateData.user_id = parseInt(studentId);
+    }
+
+    console.log(" Sending update data:", updateData);
+
+    const success = await onUpdate(assignment.id, updateData);
+    setIsLoading(false);
+
+    if (success) {
+      toast.success("Toewijzing succesvol bijgewerkt");
+      onOpenChange(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (confirm("Weet je zeker dat je deze toewijzing wilt verwijderen?")) {
+      setIsLoading(true);
+      const success = await onDelete(assignment.id);
+      setIsLoading(false);
       if (success) {
+        toast.success("Toewijzing succesvol verwijderd");
         onOpenChange(false);
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Er is een fout opgetreden");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -146,29 +157,21 @@ export function AssignmentForm({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {isEditing ? "Toewijzing Bewerken" : "Nieuwe Toewijzing"}
+            Toewijzing Bewerken
           </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Wijzig de gegevens van deze toewijzing"
-              : "Wijs een toets toe aan een groep of individuele student"}
+          <DialogDescription className="text-sm text-gray-500">
+            Wijzig de gegevens van deze toewijzing
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
-          {/* Test Selectie */}
+          {/* Toets Selectie */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium">
               <FileText className="w-4 h-4 text-indigo-500" />
               Toets
             </Label>
-            <Select
-              value={formData.testId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, testId: value })
-              }
-              disabled={isEditing}
-            >
+            <Select value={testId} onValueChange={setTestId}>
               <SelectTrigger className="border-gray-300 focus:border-indigo-500">
                 <SelectValue placeholder="Selecteer een toets" />
               </SelectTrigger>
@@ -180,7 +183,7 @@ export function AssignmentForm({
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-tests" disabled>
+                  <SelectItem value="" disabled>
                     Geen toetsen beschikbaar
                   </SelectItem>
                 )}
@@ -195,16 +198,12 @@ export function AssignmentForm({
               Toewijzen aan
             </Label>
             <Select
-              value={formData.type}
-              onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  type: value,
-                  groupId: "",
-                  studentId: "",
-                })
-              }
-              disabled={isEditing}
+              value={assignmentType}
+              onValueChange={(value) => {
+                setAssignmentType(value);
+                setGroupId("");
+                setStudentId("");
+              }}
             >
               <SelectTrigger className="border-gray-300 focus:border-indigo-500">
                 <SelectValue />
@@ -217,16 +216,10 @@ export function AssignmentForm({
           </div>
 
           {/* Groep of Student Selectie */}
-          {formData.type === "group" ? (
+          {assignmentType === "group" ? (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Groep</Label>
-              <Select
-                value={formData.groupId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, groupId: value })
-                }
-                disabled={isEditing}
-              >
+              <Select value={groupId} onValueChange={setGroupId}>
                 <SelectTrigger className="border-gray-300 focus:border-indigo-500">
                   <SelectValue placeholder="Selecteer een groep" />
                 </SelectTrigger>
@@ -238,7 +231,7 @@ export function AssignmentForm({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-groups" disabled>
+                    <SelectItem value="" disabled>
                       Geen groepen beschikbaar
                     </SelectItem>
                   )}
@@ -248,13 +241,7 @@ export function AssignmentForm({
           ) : (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Student</Label>
-              <Select
-                value={formData.studentId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, studentId: value })
-                }
-                disabled={isEditing}
-              >
+              <Select value={studentId} onValueChange={setStudentId}>
                 <SelectTrigger className="border-gray-300 focus:border-indigo-500">
                   <SelectValue placeholder="Selecteer een student" />
                 </SelectTrigger>
@@ -266,7 +253,7 @@ export function AssignmentForm({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-students" disabled>
+                    <SelectItem value="" disabled>
                       Geen studenten beschikbaar
                     </SelectItem>
                   )}
@@ -275,7 +262,7 @@ export function AssignmentForm({
             </div>
           )}
 
-          {/* Datums */}
+          {/* Start Datum */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium">
               <Calendar className="w-4 h-4 text-indigo-500" />
@@ -283,14 +270,13 @@ export function AssignmentForm({
             </Label>
             <Input
               type="datetime-local"
-              value={formData.startDate}
-              onChange={(e) =>
-                setFormData({ ...formData, startDate: e.target.value })
-              }
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
 
+          {/* Eind Datum */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-sm font-medium">
               <Clock className="w-4 h-4 text-indigo-500" />
@@ -298,24 +284,27 @@ export function AssignmentForm({
             </Label>
             <Input
               type="datetime-local"
-              value={formData.endDate}
-              onChange={(e) =>
-                setFormData({ ...formData, endDate: e.target.value })
-              }
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
               className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            {isEditing ? "Bijwerken" : "Toewijzen"}
-          </Button>
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={handleUpdate}
+              disabled={isLoading}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              )}
+              Opslaan
+            </Button>
+           
+          </div>
         </div>
       </DialogContent>
     </Dialog>

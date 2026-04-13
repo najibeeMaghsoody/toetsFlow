@@ -1,4 +1,4 @@
-// pages/docent/DocentDashboard.jsx (aangepast)
+// pages/docent/DocentDashboard.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,7 +8,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { FileText, Users, ClipboardList } from "lucide-react";
+import { FileText, Users, ClipboardList, LogOut } from "lucide-react";
 import { useTeacherData } from "../../hooks/useTeacherData";
 import { LoadingSpinner } from "../../components/teacher/LoadingSpinner";
 import { TestsTab } from "../../components/teacher/TestsTab";
@@ -18,7 +18,9 @@ import { TestFormDialog } from "../../components/teacher/TestFormDialog";
 import { GroupFormDialog } from "../../components/teacher/GroupFormDialog";
 import { SectionFormDialog } from "../../components/teacher/SectionFormDialog";
 import { QuestionFormDialog } from "../../components/teacher/QuestionFormDialog";
-
+import { Button } from "../../components/ui/button";
+import ErrorBoundary from "../../components/ErrorBoundary";
+import { toast } from "sonner";
 export function TeacherDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -34,24 +36,34 @@ export function TeacherDashboard() {
     setSelectedTest,
     setSelectedGroup,
     createTest,
+    updateTestById,
     removeTest,
     createSection,
+    updateSectionById,
     removeSection,
     createQuestion,
+    updateQuestionById,
     removeQuestion,
     createGroup,
+    updateGroupById,
     removeGroup,
     toggleStudentInGroup,
     createAssignment,
+    updateAssignmentById,
+    removeAssignment,
   } = useTeacherData();
 
   // Dialog states
-  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
+  const [isTestCreateOpen, setIsTestCreateOpen] = useState(false);
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [isSectionDialogOpen, setIsSectionDialogOpen] = useState(false);
+  const [isSectionEditOpen, setIsSectionEditOpen] = useState(false);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
+  const [isQuestionEditOpen, setIsQuestionEditOpen] = useState(false);
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [currentSection, setCurrentSection] = useState(null);
 
   // Form states
   const [testForm, setTestForm] = useState({
@@ -68,7 +80,7 @@ export function TeacherDashboard() {
   });
   const [questionForm, setQuestionForm] = useState({
     question_text: "",
-    type: "single_choice",
+    type: "multiple_choice",
     answers: [{ text: "", isCorrect: false }],
   });
   const [assignmentForm, setAssignmentForm] = useState({
@@ -85,13 +97,36 @@ export function TeacherDashboard() {
     navigate("/");
   };
 
-  // Functie om een sectie toe te voegen aan de geselecteerde test
+  const handleCreateTest = async (data) => {
+    const success = await createTest(data);
+    if (success) {
+      setIsTestCreateOpen(false);
+      setTestForm({
+        title: "",
+        description: "",
+        is_public: false,
+        max_attempts: 1,
+      });
+    }
+    return success;
+  };
+
+  const handleUpdateTest = async (id, data) => {
+    return await updateTestById(id, data);
+  };
+
   const handleAddSection = async (sectionData) => {
+    console.log("📝 handleAddSection - sectionData:", sectionData);
+    console.log("📝 handleAddSection - selectedTest:", selectedTest);
+
     if (!selectedTest?.id) {
-      console.error("Geen test geselecteerd");
+      console.error("No test selected");
       return false;
     }
+
     const success = await createSection(selectedTest.id, sectionData);
+    console.log("📝 handleAddSection - success:", success);
+
     if (success) {
       setIsSectionDialogOpen(false);
       setSectionForm({ title: "", description: "", new_page: false });
@@ -99,35 +134,71 @@ export function TeacherDashboard() {
     return success;
   };
 
-  // Functie om een vraag toe te voegen aan de geselecteerde sectie
-  const handleAddQuestion = async (questionData) => {
-    if (!editingSection?.id) {
-      console.error("Geen sectie geselecteerd voor vraag");
+  // In Dashboard.jsx - vervang de bestaande handleUpdateSection
+
+  const handleUpdateSection = async (sectionId, data) => {
+    console.log(
+      "📝 handleUpdateSection - sectionId:",
+      sectionId,
+      "type:",
+      typeof sectionId,
+    );
+    console.log("📝 handleUpdateSection - data:", data);
+
+    // Zorg dat we een geldig ID hebben
+    let id = sectionId;
+    if (typeof sectionId === "object" && sectionId !== null) {
+      id = sectionId.id;
+    }
+
+    if (!id) {
+      console.error("❌ Geen geldig sectie ID");
+      toast.error("Kan sectie niet bijwerken: ongeldig ID");
       return false;
     }
-    const success = await createQuestion(editingSection.id, questionData);
+
+    console.log("📝 Calling updateSectionById with ID:", id);
+    const success = await updateSectionById(id, data);
+    console.log("📝 updateSectionById result:", success);
+
+    if (success) {
+      setIsSectionEditOpen(false);
+      setEditingSection(null);
+      toast.success("Sectie succesvol bijgewerkt");
+    }
+    return success;
+  };
+
+  const handleAddQuestion = async (questionData) => {
+    if (!currentSection?.id) return false;
+    const success = await createQuestion(currentSection.id, questionData);
     if (success) {
       setIsQuestionDialogOpen(false);
       setQuestionForm({
         question_text: "",
-        type: "single_choice",
+        type: "multiple_choice",
         answers: [{ text: "", isCorrect: false }],
       });
-      setEditingSection(null);
+      setCurrentSection(null);
     }
     return success;
   };
 
-  // Functie om een sectie te verwijderen
-  const handleDeleteSection = async (sectionId) => {
-    const success = await removeSection(sectionId);
+  const handleUpdateQuestion = async (id, data) => {
+    const success = await updateQuestionById(id, data);
+    if (success) {
+      setIsQuestionEditOpen(false);
+      setEditingQuestion(null);
+    }
     return success;
   };
 
-  // Functie om een vraag te verwijderen
+  const handleDeleteSection = async (sectionId) => {
+    return await removeSection(sectionId);
+  };
+
   const handleDeleteQuestion = async (questionId) => {
-    const success = await removeQuestion(questionId);
-    return success;
+    return await removeQuestion(questionId);
   };
 
   if (loading) return <LoadingSpinner />;
@@ -137,104 +208,132 @@ export function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen pattern-grid">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Docent Dashboard
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Welkom terug, {user.name}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-red-600 hover:border-red-300"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Uitloggen
+            </Button>
+          </div>
+        </div>
+      </header>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="tests" className="space-y-4">
-          <TabsList className="bg-white/80 backdrop-blur-sm border border-purple-200">
+        <Tabs defaultValue="tests" className="space-y-6">
+          <TabsList className="bg-white shadow-sm border border-gray-200 p-1">
             <TabsTrigger
               value="tests"
-              className="data-[state=active]:bg-linear-to-r data-[state=active]:from-purple-600 data-[state=active]:to-violet-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
             >
               <FileText className="w-4 h-4 mr-2" />
-              Tests
+              Toetsen
             </TabsTrigger>
             <TabsTrigger
               value="groups"
-              className="data-[state=active]:bg-linear-to-r data-[state=active]:from-purple-600 data-[state=active]:to-violet-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
             >
               <Users className="w-4 h-4 mr-2" />
-              Groups
+              Groepen
             </TabsTrigger>
             <TabsTrigger
               value="assignments"
-              className="data-[state=active]:bg-linear-to-r data-[state=active]:from-purple-600 data-[state=active]:to-violet-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all"
             >
               <ClipboardList className="w-4 h-4 mr-2" />
-              Assignments
+              Toewijzingen
             </TabsTrigger>
           </TabsList>
 
-          {/* Tests Tab */}
           <TabsContent value="tests">
-            <TestsTab
-              tests={tests}
-              selectedTest={selectedTest}
-              onSelectTest={setSelectedTest}
-              onDeleteTest={removeTest}
-              onOpenTestDialog={() => setIsTestDialogOpen(true)}
-              onAddSection={() => {
-                setSectionForm({ title: "", description: "", new_page: false });
-                setIsSectionDialogOpen(true);
-              }}
-              onDeleteSection={handleDeleteSection}
-              onAddQuestion={(section) => {
-                setEditingSection(section);
-                setQuestionForm({
-                  question_text: "",
-                  type: "single_choice",
-                  answers: [{ text: "", isCorrect: false }],
-                });
-                setIsQuestionDialogOpen(true);
-              }}
-              onDeleteQuestion={handleDeleteQuestion}
-              isSectionDialogOpen={isSectionDialogOpen}
-              setIsSectionDialogOpen={setIsSectionDialogOpen}
-              isQuestionDialogOpen={isQuestionDialogOpen}
-              setIsQuestionDialogOpen={setIsQuestionDialogOpen}
-              editingSection={editingSection}
-              setEditingSection={setEditingSection}
-            />
+            <ErrorBoundary>
+              <TestsTab
+                tests={tests}
+                selectedTest={selectedTest}
+                onSelectTest={setSelectedTest}
+                onDeleteTest={removeTest}
+                onCreateTest={handleCreateTest}
+                onUpdateTest={handleUpdateTest}
+                onCreateSection={handleAddSection}
+                onUpdateSection={handleUpdateSection}
+                onDeleteSection={handleDeleteSection}
+                onCreateQuestion={handleAddQuestion}
+                onUpdateQuestion={handleUpdateQuestion}
+                onDeleteQuestion={handleDeleteQuestion}
+                isSectionCreateOpen={isSectionDialogOpen}
+                setIsSectionCreateOpen={setIsSectionDialogOpen}
+                isSectionEditOpen={isSectionEditOpen}
+                setIsSectionEditOpen={setIsSectionEditOpen}
+                editingSection={editingSection}
+                setEditingSection={setEditingSection}
+                isQuestionCreateOpen={isQuestionDialogOpen}
+                setIsQuestionCreateOpen={setIsQuestionDialogOpen}
+                isQuestionEditOpen={isQuestionEditOpen}
+                setIsQuestionEditOpen={setIsQuestionEditOpen}
+                editingQuestion={editingQuestion}
+                setEditingQuestion={setEditingQuestion}
+                currentSection={currentSection}
+                setCurrentSection={setCurrentSection}
+              />
+            </ErrorBoundary>
           </TabsContent>
 
-          {/* Groups Tab */}
           <TabsContent value="groups">
-            <GroupsTab
-              groups={groups}
-              students={students}
-              selectedGroup={selectedGroup}
-              onSelectGroup={setSelectedGroup}
-              onDeleteGroup={removeGroup}
-              onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
-              onToggleStudent={toggleStudentInGroup}
-            />
+            <ErrorBoundary>
+              <GroupsTab
+                groups={groups}
+                students={students}
+                selectedGroup={selectedGroup}
+                onSelectGroup={setSelectedGroup}
+                onDeleteGroup={removeGroup}
+                onCreateGroup={createGroup}
+                onUpdateGroup={updateGroupById}
+                onToggleStudent={toggleStudentInGroup}
+              />
+            </ErrorBoundary>
           </TabsContent>
 
-          {/* Assignments Tab */}
           <TabsContent value="assignments">
-            <AssignmentsTab
-              assignments={assignments}
-              tests={tests}
-              groups={groups}
-              students={students}
-              isDialogOpen={isAssignmentDialogOpen}
-              setIsDialogOpen={setIsAssignmentDialogOpen}
-              formData={assignmentForm}
-              setFormData={setAssignmentForm}
-              onCreateAssignment={createAssignment}
-            />
+            <ErrorBoundary>
+              <AssignmentsTab
+                assignments={assignments}
+                tests={tests}
+                groups={groups}
+                students={students}
+                onCreateAssignment={createAssignment}
+                onUpdateAssignment={updateAssignmentById}
+                onDeleteAssignment={removeAssignment}
+              />
+            </ErrorBoundary>
           </TabsContent>
         </Tabs>
       </main>
 
-      {/* Dialogs */}
+      {/* Test Create Dialog */}
       <TestFormDialog
-        open={isTestDialogOpen}
-        onOpenChange={setIsTestDialogOpen}
+        open={isTestCreateOpen}
+        onOpenChange={setIsTestCreateOpen}
         formData={testForm}
         setFormData={setTestForm}
-        onSubmit={createTest}
+        onSubmit={handleCreateTest}
+        isEditing={false}
       />
 
+      {/* Group Dialog */}
       <GroupFormDialog
         open={isGroupDialogOpen}
         onOpenChange={setIsGroupDialogOpen}
@@ -243,20 +342,44 @@ export function TeacherDashboard() {
         onSubmit={createGroup}
       />
 
+      {/* Section Create Dialog */}
       <SectionFormDialog
         open={isSectionDialogOpen}
         onOpenChange={setIsSectionDialogOpen}
-        formData={sectionForm}
-        setFormData={setSectionForm}
+        testId={selectedTest?.id}
         onSubmit={handleAddSection}
+        isEditing={false}
       />
 
+      {/* Section Edit Dialog */}
+      <SectionFormDialog
+        open={isSectionEditOpen}
+        onOpenChange={setIsSectionEditOpen}
+        initialData={editingSection}
+        testId={selectedTest?.id}
+        onSubmit={handleUpdateSection}
+        isEditing={true}
+      />
+
+      {/* Question Create Dialog */}
       <QuestionFormDialog
         open={isQuestionDialogOpen}
         onOpenChange={setIsQuestionDialogOpen}
-        formData={questionForm}
-        setFormData={setQuestionForm}
+        sectionId={currentSection?.id}
+        sectionTitle={currentSection?.title}
         onSubmit={handleAddQuestion}
+        isEditing={false}
+      />
+
+      {/* Question Edit Dialog */}
+      <QuestionFormDialog
+        open={isQuestionEditOpen}
+        onOpenChange={setIsQuestionEditOpen}
+        initialData={editingQuestion}
+        sectionId={currentSection?.id}
+        sectionTitle={currentSection?.title}
+        onSubmit={handleUpdateQuestion}
+        isEditing={true}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-// hooks/useTeacherData.js - Eenvoudige versie (werkt prima!)
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
@@ -7,16 +6,26 @@ import {
   getStudents,
   getAssignments,
   addTest,
+  updateTest,
   deleteTest,
   addSection,
+  updateSection,
   deleteSection,
   addQuestion,
+  updateQuestion,
   deleteQuestion,
+  addAnswer,
+  updateAnswer,
+  deleteAnswer,
   addGroup,
+  updateGroup,
   deleteGroup,
   addStudentToGroup,
   removeStudentFromGroup,
   addAssignment,
+  updateAssignment,
+  deleteAssignment,
+  registerStateUpdaters,
 } from "../services/teacherService";
 
 export function useTeacherData() {
@@ -28,10 +37,19 @@ export function useTeacherData() {
   const [selectedTest, setSelectedTest] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
-  const loadAllData = useCallback(async () => {
-    console.log(" Loading data...");
-    setLoading(true);
+  useEffect(() => {
+    registerStateUpdaters({
+      updateTests: setTests,
+      updateGroups: setGroups,
+      updateAssignments: setAssignments,
+      updateSelectedTest: setSelectedTest,
+      updateSelectedGroup: setSelectedGroup,
+      updateStudents: setStudents,
+    });
+  }, []);
 
+  const loadAllData = useCallback(async () => {
+    setLoading(true);
     try {
       const [testsData, groupsData, studentsData, assignmentsData] =
         await Promise.all([
@@ -61,38 +79,70 @@ export function useTeacherData() {
     loadAllData();
   }, [loadAllData]);
 
-  // Refresh functies
-  const refreshTests = async () => {
+  // ============ REFRESH FUNCTIES ============
+  const refreshTests = useCallback(async () => {
+    console.log("🔄 Refreshing tests...");
     const data = await getTests();
     setTests(data);
+
     if (selectedTest) {
-      const updated = data.find((t) => t.id === selectedTest.id);
-      if (updated) setSelectedTest(updated);
+      const updatedTest = data.find((t) => t.id === selectedTest.id);
+      if (updatedTest) {
+        console.log("✅ Updating selected test with fresh data:", updatedTest);
+        setSelectedTest(updatedTest);
+      }
     }
     return data;
-  };
+  }, [selectedTest]);
 
-  const refreshGroups = async () => {
+  const refreshGroups = useCallback(async () => {
+    console.log("🔄 Refreshing groups...");
     const data = await getGroups();
     setGroups(data);
-    return data;
-  };
 
-  const refreshAssignments = async () => {
+    if (selectedGroup) {
+      const updatedGroup = data.find((g) => g.id === selectedGroup.id);
+      if (updatedGroup) setSelectedGroup(updatedGroup);
+    }
+    return data;
+  }, [selectedGroup]);
+
+  const refreshAssignments = useCallback(async () => {
+    console.log("🔄 Refreshing assignments...");
     const data = await getAssignments();
     setAssignments(data);
     return data;
-  };
+  }, []);
 
-  // CRUD operaties
+  // ============ TEST CRUD ============
   const createTest = async (testData) => {
     try {
       await addTest(testData);
-      toast.success("Toets succesvol aangemaakt");
       await refreshTests();
+      toast.success("Toets succesvol aangemaakt");
       return true;
     } catch (error) {
+      console.error("Error in createTest:", error);
       toast.error(error.response?.data?.message || "Fout bij aanmaken toets");
+      return false;
+    }
+  };
+
+  const updateTestById = async (id, data) => {
+    try {
+      const testId = typeof id === "object" ? id.id : id;
+      console.log("📝 Updating test with ID:", testId);
+      console.log("📝 Update data:", data);
+
+      await updateTest(testId, data);
+      await refreshTests();
+
+      console.log("✅ Test updated and data refreshed");
+      toast.success("Toets succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("❌ Error in updateTestById:", error);
+      toast.error(error.response?.data?.message || "Fout bij bijwerken toets");
       return false;
     }
   };
@@ -102,11 +152,12 @@ export function useTeacherData() {
       return false;
     try {
       await deleteTest(testId);
-      toast.success("Toets verwijderd");
       if (selectedTest?.id === testId) setSelectedTest(null);
       await refreshTests();
+      toast.success("Toets succesvol verwijderd");
       return true;
     } catch (error) {
+      console.error("Error in removeTest:", error);
       toast.error(
         error.response?.data?.message || "Fout bij verwijderen toets",
       );
@@ -114,14 +165,29 @@ export function useTeacherData() {
     }
   };
 
+  // ============ SECTION CRUD ============
   const createSection = async (testId, sectionData) => {
     try {
       await addSection(testId, sectionData);
-      toast.success("Sectie toegevoegd");
       await refreshTests();
+      toast.success("Sectie succesvol toegevoegd");
       return true;
     } catch (error) {
+      console.error("Error in createSection:", error);
       toast.error(error.response?.data?.message || "Fout bij toevoegen sectie");
+      return false;
+    }
+  };
+
+  const updateSectionById = async (sectionId, sectionData) => {
+    try {
+      await updateSection(sectionId, sectionData);
+      await refreshTests();
+      toast.success("Sectie succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("Error in updateSectionById:", error);
+      toast.error(error.response?.data?.message || "Fout bij bijwerken sectie");
       return false;
     }
   };
@@ -131,10 +197,11 @@ export function useTeacherData() {
       return false;
     try {
       await deleteSection(sectionId);
-      toast.success("Sectie verwijderd");
       await refreshTests();
+      toast.success("Sectie succesvol verwijderd");
       return true;
     } catch (error) {
+      console.error("Error in removeSection:", error);
       toast.error(
         error.response?.data?.message || "Fout bij verwijderen sectie",
       );
@@ -142,14 +209,29 @@ export function useTeacherData() {
     }
   };
 
+  // ============ QUESTION CRUD ============
   const createQuestion = async (sectionId, questionData) => {
     try {
       await addQuestion(sectionId, questionData);
-      toast.success("Vraag toegevoegd");
       await refreshTests();
+      toast.success("Vraag succesvol toegevoegd");
       return true;
     } catch (error) {
+      console.error("Error in createQuestion:", error);
       toast.error(error.response?.data?.message || "Fout bij toevoegen vraag");
+      return false;
+    }
+  };
+
+  const updateQuestionById = async (questionId, questionData) => {
+    try {
+      await updateQuestion(questionId, questionData);
+      await refreshTests();
+      toast.success("Vraag succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("Error in updateQuestionById:", error);
+      toast.error(error.response?.data?.message || "Fout bij bijwerken vraag");
       return false;
     }
   };
@@ -159,10 +241,11 @@ export function useTeacherData() {
       return false;
     try {
       await deleteQuestion(questionId);
-      toast.success("Vraag verwijderd");
       await refreshTests();
+      toast.success("Vraag succesvol verwijderd");
       return true;
     } catch (error) {
+      console.error("Error in removeQuestion:", error);
       toast.error(
         error.response?.data?.message || "Fout bij verwijderen vraag",
       );
@@ -170,14 +253,77 @@ export function useTeacherData() {
     }
   };
 
+  // ============ ANSWER CRUD ============
+  const createAnswer = async (questionId, answerData) => {
+    try {
+      await addAnswer(questionId, answerData);
+      await refreshTests();
+      toast.success("Antwoord succesvol toegevoegd");
+      return true;
+    } catch (error) {
+      console.error("Error in createAnswer:", error);
+      toast.error(
+        error.response?.data?.message || "Fout bij toevoegen antwoord",
+      );
+      return false;
+    }
+  };
+
+  const updateAnswerById = async (answerId, answerData) => {
+    try {
+      await updateAnswer(answerId, answerData);
+      await refreshTests();
+      toast.success("Antwoord succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("Error in updateAnswerById:", error);
+      toast.error(
+        error.response?.data?.message || "Fout bij bijwerken antwoord",
+      );
+      return false;
+    }
+  };
+
+  const removeAnswer = async (answerId) => {
+    if (!confirm("Weet je zeker dat je dit antwoord wilt verwijderen?"))
+      return false;
+    try {
+      await deleteAnswer(answerId);
+      await refreshTests();
+      toast.success("Antwoord succesvol verwijderd");
+      return true;
+    } catch (error) {
+      console.error("Error in removeAnswer:", error);
+      toast.error(
+        error.response?.data?.message || "Fout bij verwijderen antwoord",
+      );
+      return false;
+    }
+  };
+
+  // ============ GROUP CRUD ============
   const createGroup = async (groupData) => {
     try {
       await addGroup(groupData);
-      toast.success("Groep aangemaakt");
       await refreshGroups();
+      toast.success("Groep succesvol aangemaakt");
       return true;
     } catch (error) {
+      console.error("Error in createGroup:", error);
       toast.error(error.response?.data?.message || "Fout bij aanmaken groep");
+      return false;
+    }
+  };
+
+  const updateGroupById = async (id, groupData) => {
+    try {
+      await updateGroup(id, groupData);
+      await refreshGroups();
+      toast.success("Groep succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("Error in updateGroupById:", error);
+      toast.error(error.response?.data?.message || "Fout bij bijwerken groep");
       return false;
     }
   };
@@ -187,11 +333,12 @@ export function useTeacherData() {
       return false;
     try {
       await deleteGroup(groupId);
-      toast.success("Groep verwijderd");
       if (selectedGroup?.id === groupId) setSelectedGroup(null);
       await refreshGroups();
+      toast.success("Groep succesvol verwijderd");
       return true;
     } catch (error) {
+      console.error("Error in removeGroup:", error);
       toast.error(
         error.response?.data?.message || "Fout bij verwijderen groep",
       );
@@ -199,31 +346,70 @@ export function useTeacherData() {
     }
   };
 
+  // ============ GROUP STUDENTS ============
   const toggleStudentInGroup = async (groupId, studentId, isInGroup) => {
     try {
       if (isInGroup) {
         await removeStudentFromGroup(groupId, studentId);
-        toast.success("Student verwijderd uit groep");
       } else {
         await addStudentToGroup(groupId, studentId);
-        toast.success("Student toegevoegd aan groep");
       }
       await refreshGroups();
+      toast.success(
+        isInGroup
+          ? "Student verwijderd uit groep"
+          : "Student toegevoegd aan groep",
+      );
       return true;
     } catch (error) {
+      console.error("Error toggling student:", error);
       toast.error(error.response?.data?.message || "Fout bij wijzigen groep");
       return false;
     }
   };
 
+  // ============ ASSIGNMENT CRUD ============
   const createAssignment = async (assignmentData) => {
     try {
       await addAssignment(assignmentData);
-      toast.success("Toets toegewezen");
       await refreshAssignments();
+      toast.success("Toets succesvol toegewezen");
       return true;
     } catch (error) {
+      console.error("Error in createAssignment:", error);
       toast.error(error.response?.data?.message || "Fout bij toewijzen toets");
+      return false;
+    }
+  };
+
+  const updateAssignmentById = async (assignmentId, assignmentData) => {
+    try {
+      await updateAssignment(assignmentId, assignmentData);
+      await refreshAssignments();
+      toast.success("Toewijzing succesvol bijgewerkt");
+      return true;
+    } catch (error) {
+      console.error("Error in updateAssignmentById:", error);
+      toast.error(
+        error.response?.data?.message || "Fout bij bijwerken toewijzing",
+      );
+      return false;
+    }
+  };
+
+  const removeAssignment = async (assignmentId) => {
+    if (!confirm("Weet je zeker dat je deze toewijzing wilt verwijderen?"))
+      return false;
+    try {
+      await deleteAssignment(assignmentId);
+      await refreshAssignments();
+      toast.success("Toewijzing succesvol verwijderd");
+      return true;
+    } catch (error) {
+      console.error("Error in removeAssignment:", error);
+      toast.error(
+        error.response?.data?.message || "Fout bij verwijderen toewijzing",
+      );
       return false;
     }
   };
@@ -239,15 +425,27 @@ export function useTeacherData() {
     setSelectedTest,
     setSelectedGroup,
     createTest,
+    updateTestById,
     removeTest,
     createSection,
+    updateSectionById,
     removeSection,
     createQuestion,
+    updateQuestionById,
     removeQuestion,
+    createAnswer,
+    updateAnswerById,
+    removeAnswer,
     createGroup,
+    updateGroupById,
     removeGroup,
     toggleStudentInGroup,
     createAssignment,
+    updateAssignmentById,
+    removeAssignment,
     refreshData: loadAllData,
+    refreshTests,
+    refreshGroups,
+    refreshAssignments,
   };
 }

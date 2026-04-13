@@ -9,7 +9,6 @@ use App\Models\Question;
 use App\Models\Answer;
 use App\Models\Group;
 use App\Models\User;
-use App\Models\TestAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +39,21 @@ class TeacherController extends BaseController
         return response()->json(['data' => $tests]);
     }
 
+    public function getTest($id, Request $request)
+    {
+        $test = Test::where('teacher_id', $request->user()->id)
+            ->with(['sections' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions' => function($query) {
+                $query->orderBy('order');
+            }, 'sections.questions.answers' => function($query) {
+                $query->orderBy('order');
+            }])
+            ->findOrFail($id);
+        
+        return response()->json(['data' => $test]);
+    }
+
     public function createTest(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -60,7 +74,7 @@ class TeacherController extends BaseController
             'max_attempts' => $request->max_attempts ?? 1,
         ]);
 
-        return response()->json(['data' => $test], 201);
+        return response()->json(['data' => $test, 'message' => 'Toets succesvol aangemaakt'], 201);
     }
 
     public function updateTest(Request $request, $id)
@@ -68,7 +82,7 @@ class TeacherController extends BaseController
         $test = Test::where('teacher_id', $request->user()->id)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'is_public' => 'boolean',
             'max_attempts' => 'integer|min:1|max:10',
@@ -80,15 +94,16 @@ class TeacherController extends BaseController
 
         $test->update($request->only(['title', 'description', 'is_public', 'max_attempts']));
 
-        return response()->json(['data' => $test]);
+        return response()->json(['data' => $test, 'message' => 'Toets succesvol bijgewerkt']);
     }
 
     public function deleteTest(Request $request, $id)
     {
         $test = Test::where('teacher_id', $request->user()->id)->findOrFail($id);
+        $testTitle = $test->title;
         $test->delete();
         
-        return response()->json(['message' => 'Test deleted successfully']);
+        return response()->json(['message' => "Toets '{$testTitle}' succesvol verwijderd"]);
     }
 
     // ==================== SECTION MANAGEMENT ====================
@@ -116,19 +131,30 @@ class TeacherController extends BaseController
             'new_page' => $request->new_page ?? false,
         ]);
 
-        return response()->json(['data' => $section], 201);
+        return response()->json(['data' => $section, 'message' => 'Sectie succesvol toegevoegd'], 201);
     }
 
-    public function updateSection(Request $request, $sectionId)
+    public function getSection($id, Request $request)
     {
-        $section = Section::with('test')->findOrFail($sectionId);
+        $section = Section::with('test')->findOrFail($id);
+        
+        if ($section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json(['data' => $section]);
+    }
+
+    public function updateSection(Request $request, $id)
+    {
+        $section = Section::with('test')->findOrFail($id);
         
         if ($section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'new_page' => 'boolean',
         ]);
@@ -139,25 +165,21 @@ class TeacherController extends BaseController
 
         $section->update($request->only(['title', 'description', 'new_page']));
 
-        return response()->json(['data' => $section]);
+        return response()->json(['data' => $section, 'message' => 'Sectie succesvol bijgewerkt']);
     }
 
-    public function deleteSection(Request $request, $sectionId)
+    public function deleteSection(Request $request, $id)
     {
-        Log::info('Delete section called', ['section_id' => $sectionId, 'user_id' => $request->user()->id]);
-        
-        $section = Section::with('test')->findOrFail($sectionId);
+        $section = Section::with('test')->findOrFail($id);
         
         if ($section->test->teacher_id !== $request->user()->id) {
-            Log::warning('Unauthorized delete attempt');
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         
+        $sectionTitle = $section->title;
         $section->delete();
         
-        Log::info('Section deleted successfully');
-        
-        return response()->json(['message' => 'Section deleted successfully']);
+        return response()->json(['message' => "Sectie '{$sectionTitle}' succesvol verwijderd"]);
     }
 
     // ==================== QUESTION MANAGEMENT ====================
@@ -187,20 +209,31 @@ class TeacherController extends BaseController
             'order' => $order,
         ]);
 
-        return response()->json(['data' => $question, 'id' => $question->id], 201);
+        return response()->json(['data' => $question, 'id' => $question->id, 'message' => 'Vraag succesvol toegevoegd'], 201);
     }
 
-    public function updateQuestion(Request $request, $questionId)
+    public function getQuestion($id, Request $request)
     {
-        $question = Question::with('section.test')->findOrFail($questionId);
+        $question = Question::with(['section.test', 'answers'])->findOrFail($id);
+        
+        if ($question->section->test->teacher_id !== $request->user()->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json(['data' => $question]);
+    }
+
+    public function updateQuestion(Request $request, $id)
+    {
+        $question = Question::with('section.test')->findOrFail($id);
         
         if ($question->section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'question_text' => 'sometimes|string',
-            'type' => 'sometimes|in:single_choice,multiple_choice,text',
+            'question_text' => 'required|string',
+            'type' => 'required|in:single_choice,multiple_choice,text',
         ]);
 
         if ($validator->fails()) {
@@ -209,25 +242,20 @@ class TeacherController extends BaseController
 
         $question->update($request->only(['question_text', 'type']));
 
-        return response()->json(['data' => $question]);
+        return response()->json(['data' => $question, 'message' => 'Vraag succesvol bijgewerkt']);
     }
 
-    public function deleteQuestion(Request $request, $questionId)
+    public function deleteQuestion(Request $request, $id)
     {
-        Log::info('Delete question called', ['question_id' => $questionId, 'user_id' => $request->user()->id]);
-        
-        $question = Question::with('section.test')->findOrFail($questionId);
+        $question = Question::with('section.test')->findOrFail($id);
         
         if ($question->section->test->teacher_id !== $request->user()->id) {
-            Log::warning('Unauthorized delete attempt');
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         
         $question->delete();
         
-        Log::info('Question deleted successfully');
-        
-        return response()->json(['message' => 'Question deleted successfully']);
+        return response()->json(['message' => 'Vraag succesvol verwijderd']);
     }
 
     // ==================== ANSWER MANAGEMENT ====================
@@ -257,19 +285,19 @@ class TeacherController extends BaseController
             'order' => $order,
         ]);
 
-        return response()->json(['data' => $answer], 201);
+        return response()->json(['data' => $answer, 'message' => 'Antwoord succesvol toegevoegd'], 201);
     }
 
-    public function updateAnswer(Request $request, $answerId)
+    public function updateAnswer(Request $request, $id)
     {
-        $answer = Answer::with('question.section.test')->findOrFail($answerId);
+        $answer = Answer::with('question.section.test')->findOrFail($id);
         
         if ($answer->question->section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         $validator = Validator::make($request->all(), [
-            'answer_text' => 'sometimes|string',
+            'answer_text' => 'required|string',
             'is_correct' => 'boolean',
         ]);
 
@@ -279,12 +307,12 @@ class TeacherController extends BaseController
 
         $answer->update($request->only(['answer_text', 'is_correct']));
 
-        return response()->json(['data' => $answer]);
+        return response()->json(['data' => $answer, 'message' => 'Antwoord succesvol bijgewerkt']);
     }
 
-    public function deleteAnswer(Request $request, $answerId)
+    public function deleteAnswer(Request $request, $id)
     {
-        $answer = Answer::with('question.section.test')->findOrFail($answerId);
+        $answer = Answer::with('question.section.test')->findOrFail($id);
         
         if ($answer->question->section->test->teacher_id !== $request->user()->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
@@ -292,7 +320,7 @@ class TeacherController extends BaseController
         
         $answer->delete();
         
-        return response()->json(['message' => 'Answer deleted successfully']);
+        return response()->json(['message' => 'Antwoord succesvol verwijderd']);
     }
 
     // ==================== GROUP MANAGEMENT ====================
@@ -306,6 +334,17 @@ class TeacherController extends BaseController
             ->get();
         
         return response()->json(['data' => $groups]);
+    }
+
+    public function getGroup($id, Request $request)
+    {
+        $group = Group::where('teacher_id', $request->user()->id)
+            ->with(['users' => function($query) {
+                $query->select('users.id', 'users.name', 'users.email');
+            }])
+            ->findOrFail($id);
+        
+        return response()->json(['data' => $group]);
     }
 
     public function createGroup(Request $request)
@@ -324,7 +363,7 @@ class TeacherController extends BaseController
             'description' => $request->description,
         ]);
 
-        return response()->json(['data' => $group], 201);
+        return response()->json(['data' => $group, 'message' => 'Groep succesvol aangemaakt'], 201);
     }
 
     public function updateGroup(Request $request, $id)
@@ -332,7 +371,7 @@ class TeacherController extends BaseController
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
@@ -342,19 +381,19 @@ class TeacherController extends BaseController
 
         $group->update($request->only(['name', 'description']));
 
-        return response()->json(['data' => $group]);
+        return response()->json(['data' => $group, 'message' => 'Groep succesvol bijgewerkt']);
     }
 
     public function deleteGroup(Request $request, $id)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($id);
+        $groupName = $group->name;
         
-        // Detach all students and test assignments first
         $group->users()->detach();
         $group->tests()->detach();
         $group->delete();
         
-        return response()->json(['message' => 'Group deleted successfully']);
+        return response()->json(['message' => "Groep '{$groupName}' succesvol verwijderd"]);
     }
 
     // ==================== STUDENTS IN GROUP ====================
@@ -377,28 +416,27 @@ class TeacherController extends BaseController
             return response()->json(['error' => 'User is not a student'], 422);
         }
 
-        // Check if student is already in group
         if ($group->users()->where('user_id', $request->user_id)->exists()) {
             return response()->json(['error' => 'Student already in group'], 422);
         }
 
         $group->users()->attach($request->user_id);
 
-        return response()->json(['message' => 'Student added to group']);
+        return response()->json(['message' => "Student '{$student->name}' succesvol toegevoegd aan groep '{$group->name}'"]);
     }
 
     public function removeStudentFromGroup(Request $request, $groupId, $userId)
     {
         $group = Group::where('teacher_id', $request->user()->id)->findOrFail($groupId);
+        $student = User::findOrFail($userId);
         
-        // Check if student is in group
         if (!$group->users()->where('user_id', $userId)->exists()) {
             return response()->json(['error' => 'Student not in group'], 404);
         }
         
         $group->users()->detach($userId);
         
-        return response()->json(['message' => 'Student removed from group']);
+        return response()->json(['message' => "Student '{$student->name}' succesvol verwijderd uit groep '{$group->name}'"]);
     }
 
     // ==================== ASSIGN TESTS ====================
@@ -422,7 +460,7 @@ class TeacherController extends BaseController
             'end_date' => $request->end_date,
         ]);
 
-        return response()->json(['message' => 'Test assigned to group']);
+        return response()->json(['message' => "Toets '{$test->title}' succesvol toegewezen aan groep '{$group->name}'"]);
     }
 
     public function assignTestToStudent(Request $request, $testId)
@@ -458,14 +496,13 @@ class TeacherController extends BaseController
             'end_date' => $request->end_date,
         ]]);
 
-        return response()->json(['message' => 'Test assigned to student']);
+        return response()->json(['message' => "Toets '{$test->title}' succesvol toegewezen aan student '{$student->name}'"]);
     }
 
-    // ==================== ASSIGNMENTS (GET) ====================
+    // ==================== ASSIGNMENTS ====================
     
     public function getAssignments(Request $request)
     {
-        // Haal alle groepen van de docent op met hun toegewezen toetsen
         $groups = Group::where('teacher_id', $request->user()->id)
             ->with(['tests' => function($query) {
                 $query->withPivot('start_date', 'end_date', 'id');
@@ -474,16 +511,13 @@ class TeacherController extends BaseController
             }])
             ->get();
 
-        // Formatteer de data
         $assignments = [];
         
         foreach ($groups as $group) {
             foreach ($group->tests as $test) {
-                // Check of dit een individuele toewijzing is
                 $isIndividual = str_starts_with($group->name, 'Individual_');
                 
                 if ($isIndividual && $group->users->count() === 1) {
-                    // Individuele toewijzing
                     $student = $group->users->first();
                     $assignments[] = [
                         'id' => $test->pivot->id,
@@ -499,11 +533,16 @@ class TeacherController extends BaseController
                             'name' => $student->name,
                             'email' => $student->email,
                         ],
+                        'group_id' => $group->id,
+                        'group' => [
+                            'id' => $group->id,
+                            'name' => $group->name,
+                            'description' => $group->description,
+                        ],
                         'start_date' => $test->pivot->start_date,
                         'end_date' => $test->pivot->end_date,
                     ];
                 } else {
-                    // Groep toewijzing
                     $assignments[] = [
                         'id' => $test->pivot->id,
                         'test_id' => $test->id,
@@ -528,6 +567,166 @@ class TeacherController extends BaseController
         return response()->json(['data' => $assignments]);
     }
 
+    public function getAssignment($id, Request $request)
+    {
+        $groupTest = DB::table('group_test')->where('id', $id)->first();
+        
+        if (!$groupTest) {
+            return response()->json(['error' => 'Assignment not found'], 404);
+        }
+        
+        $group = Group::where('id', $groupTest->group_id)
+            ->where('teacher_id', $request->user()->id)
+            ->first();
+        
+        if (!$group) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $test = Test::find($groupTest->test_id);
+        $isIndividual = str_starts_with($group->name, 'Individual_');
+        
+        $assignment = [
+            'id' => $groupTest->id,
+            'test_id' => $test->id,
+            'test' => [
+                'id' => $test->id,
+                'title' => $test->title,
+                'description' => $test->description,
+            ],
+            'start_date' => $groupTest->start_date,
+            'end_date' => $groupTest->end_date,
+        ];
+        
+        if ($isIndividual && $group->users->count() === 1) {
+            $student = $group->users->first();
+            $assignment['user_id'] = $student->id;
+            $assignment['user'] = [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
+            ];
+        } else {
+            $assignment['group_id'] = $group->id;
+            $assignment['group'] = [
+                'id' => $group->id,
+                'name' => $group->name,
+                'description' => $group->description,
+            ];
+        }
+        
+        return response()->json(['data' => $assignment]);
+    }
+
+    public function updateAssignment(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'test_id' => 'sometimes|exists:tests,id',
+            'group_id' => 'sometimes|exists:groups,id',
+            'user_id' => 'sometimes|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $groupTest = DB::table('group_test')->where('id', $id)->first();
+        
+        if (!$groupTest) {
+            return response()->json(['error' => 'Toewijzing niet gevonden'], 404);
+        }
+        
+        $group = Group::where('id', $groupTest->group_id)
+            ->where('teacher_id', $request->user()->id)
+            ->first();
+        
+        if (!$group) {
+            return response()->json(['error' => 'Niet geautoriseerd'], 403);
+        }
+        
+        $updateData = [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ];
+        
+        if ($request->has('test_id') && $request->test_id != $groupTest->test_id) {
+            $updateData['test_id'] = $request->test_id;
+        }
+        
+        $needsReassignment = false;
+        $newGroupId = $groupTest->group_id;
+        
+        if ($request->has('group_id') && $request->group_id != $groupTest->group_id) {
+            $needsReassignment = true;
+            $newGroupId = $request->group_id;
+            
+            $newGroup = Group::where('id', $newGroupId)
+                ->where('teacher_id', $request->user()->id)
+                ->first();
+            
+            if (!$newGroup) {
+                return response()->json(['error' => 'Nieuwe groep niet gevonden'], 403);
+            }
+        } elseif ($request->has('user_id')) {
+            $test = Test::find($request->test_id ?? $groupTest->test_id);
+            $groupName = "Individual_{$test->title}_{$request->user_id}";
+            
+            $individualGroup = Group::firstOrCreate([
+                'name' => $groupName,
+                'teacher_id' => $request->user()->id,
+            ]);
+            
+            $individualGroup->users()->syncWithoutDetaching([$request->user_id]);
+            
+            $newGroupId = $individualGroup->id;
+            $needsReassignment = true;
+        }
+        
+        if ($needsReassignment) {
+            DB::table('group_test')->where('id', $id)->delete();
+            
+            DB::table('group_test')->insert([
+                'group_id' => $newGroupId,
+                'test_id' => $updateData['test_id'] ?? $groupTest->test_id,
+                'start_date' => $updateData['start_date'],
+                'end_date' => $updateData['end_date'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            return response()->json(['message' => 'Toewijzing succesvol bijgewerkt']);
+        } else {
+            DB::table('group_test')
+                ->where('id', $id)
+                ->update($updateData);
+            
+            return response()->json(['message' => 'Toewijzing succesvol bijgewerkt']);
+        }
+    }
+
+    public function deleteAssignment(Request $request, $id)
+    {
+        $groupTest = DB::table('group_test')->where('id', $id)->first();
+        
+        if (!$groupTest) {
+            return response()->json(['error' => 'Toewijzing niet gevonden'], 404);
+        }
+        
+        $group = Group::where('id', $groupTest->group_id)
+            ->where('teacher_id', $request->user()->id)
+            ->first();
+        
+        if (!$group) {
+            return response()->json(['error' => 'Niet geautoriseerd'], 403);
+        }
+        
+        DB::table('group_test')->where('id', $id)->delete();
+        
+        return response()->json(['message' => 'Toewijzing succesvol verwijderd']);
+    }
+
     // ==================== STUDENTS ====================
     
     public function getStudents(Request $request)
@@ -538,46 +737,5 @@ class TeacherController extends BaseController
             ->get();
         
         return response()->json(['data' => $students]);
-    }
-
-    // ==================== RETAKE MANAGEMENT ====================
-    
-    public function getStudentsForRetake(Request $request, $testId)
-    {
-        $test = Test::where('teacher_id', $request->user()->id)->findOrFail($testId);
-
-        $validator = Validator::make($request->all(), [
-            'max_score' => 'required|numeric|min:0|max:10',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $students = User::whereHas('testAttempts', function($query) use ($testId, $request) {
-            $query->where('test_id', $testId)
-                  ->where('score', '<', $request->max_score);
-        })->with(['testAttempts' => function($query) use ($testId) {
-            $query->where('test_id', $testId)->latest();
-        }])->get();
-
-        return response()->json(['data' => $students]);
-    }
-
-    // ==================== GET SINGLE TEST WITH DETAILS ====================
-    
-    public function getTest($id, Request $request)
-    {
-        $test = Test::where('teacher_id', $request->user()->id)
-            ->with(['sections' => function($query) {
-                $query->orderBy('order');
-            }, 'sections.questions' => function($query) {
-                $query->orderBy('order');
-            }, 'sections.questions.answers' => function($query) {
-                $query->orderBy('order');
-            }])
-            ->findOrFail($id);
-        
-        return response()->json(['data' => $test]);
     }
 }
