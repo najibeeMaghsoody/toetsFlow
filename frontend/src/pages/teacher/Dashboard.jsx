@@ -117,8 +117,8 @@ export function TeacherDashboard() {
   };
 
   const handleAddSection = async (sectionData) => {
-    console.log("📝 handleAddSection - sectionData:", sectionData);
-    console.log("📝 handleAddSection - selectedTest:", selectedTest);
+    console.log("handleAddSection - sectionData:", sectionData);
+    console.log("handleAddSection - selectedTest:", selectedTest);
 
     if (!selectedTest?.id) {
       console.error("No test selected");
@@ -126,7 +126,7 @@ export function TeacherDashboard() {
     }
 
     const success = await createSection(selectedTest.id, sectionData);
-    console.log("📝 handleAddSection - success:", success);
+    console.log("handleAddSection - success:", success);
 
     if (success) {
       setIsSectionDialogOpen(false);
@@ -139,12 +139,12 @@ export function TeacherDashboard() {
 
   const handleUpdateSection = async (sectionId, data) => {
     console.log(
-      "📝 handleUpdateSection - sectionId:",
+      "handleUpdateSection - sectionId:",
       sectionId,
       "type:",
       typeof sectionId,
     );
-    console.log("📝 handleUpdateSection - data:", data);
+    console.log("handleUpdateSection - data:", data);
 
 
     let id = sectionId;
@@ -160,7 +160,7 @@ export function TeacherDashboard() {
 
     console.log("Calling updateSectionById with ID:", id);
     const success = await updateSectionById(id, data);
-    console.log("📝 updateSectionById result:", success);
+    console.log("updateSectionById result:", success);
 
     if (success) {
       setIsSectionEditOpen(false);
